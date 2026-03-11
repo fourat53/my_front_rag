@@ -21,12 +21,16 @@ const navItems = [
     link: "/",
   },
   {
-    name: "Tools",
-    link: "/tools",
+    name: "Chat V1",
+    link: "/chat-v1",
   },
   {
-    name: "Services",
-    link: "/services",
+    name: "Chat V2",
+    link: "/chat-v2",
+  },
+  {
+    name: "Example",
+    link: "/example",
   },
   {
     name: "About",
