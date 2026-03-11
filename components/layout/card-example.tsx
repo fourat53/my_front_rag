@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PlusIcon, BluetoothIcon } from "@phosphor-icons/react";
+import { IconPlus, IconBluetooth } from "@tabler/icons-react";
 import Image from "next/image";
 
 export default function CardExample() {
@@ -47,13 +47,13 @@ export default function CardExample() {
       <CardFooter>
         <AlertDialog>
           <AlertDialogTrigger render={<Button />}>
-            <PlusIcon data-icon="inline-start" />
+            <IconPlus data-icon="inline-start" />
             Show Dialog
           </AlertDialogTrigger>
           <AlertDialogContent size="sm">
             <AlertDialogHeader>
               <AlertDialogMedia>
-                <BluetoothIcon />
+                <IconBluetooth />
               </AlertDialogMedia>
               <AlertDialogTitle>Allow accessory to connect?</AlertDialogTitle>
               <AlertDialogDescription>

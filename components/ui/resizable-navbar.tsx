@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { ListIcon, XIcon } from "@phosphor-icons/react";
+import { IconList, IconX } from "@tabler/icons-react";
 import {
   motion,
   AnimatePresence,
@@ -221,9 +221,9 @@ export const MobileNavToggle = ({
   onClick: () => void;
 }) => {
   return isOpen ? (
-    <XIcon className="size-6 text-black dark:text-white" onClick={onClick} />
+    <IconX className="size-6 text-black dark:text-white" onClick={onClick} />
   ) : (
-    <ListIcon className="size-6 text-black dark:text-white" onClick={onClick} />
+    <IconList className="size-6 text-black dark:text-white" onClick={onClick} />
   );
 };
 

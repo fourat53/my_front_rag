@@ -2,7 +2,7 @@
 
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { type ThemeProviderProps } from "next-themes";
-import { MoonIcon, SunIcon, MonitorIcon } from "@phosphor-icons/react";
+import { IconMoon, IconSun, IconDeviceDesktop } from "@tabler/icons-react";
 import { JSX } from "react";
 
 export type ThemesType = {
@@ -12,9 +12,9 @@ export type ThemesType = {
 };
 
 export const themes: ThemesType[] = [
-  { mode: "light", icon: <SunIcon />, label: "Light" },
-  { mode: "dark", icon: <MoonIcon />, label: "Dark" },
-  { mode: "system", icon: <MonitorIcon />, label: "System" },
+  { mode: "light", icon: <IconSun />, label: "Light" },
+  { mode: "dark", icon: <IconMoon />, label: "Dark" },
+  { mode: "system", icon: <IconDeviceDesktop />, label: "System" },
 ];
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
