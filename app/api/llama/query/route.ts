@@ -19,7 +19,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Return the response body stream directly
     return new Response(result.body, {
       headers: {
         "Content-Type": "text/plain",
