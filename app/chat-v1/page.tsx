@@ -1,244 +1,385 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  IconEdit,
+  IconTrash,
+  IconSend,
+  IconPlus,
+  IconMessageCircle,
+  IconMessage2,
+} from "@tabler/icons-react";
 
-type Message = {
+interface Message {
+  id: string;
   role: "user" | "assistant";
   content: string;
-};
+}
 
-export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+interface Chat {
+  id: string;
+  title: string;
+  messages: Message[];
+}
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+export default function ChatInterface() {
+  const [chats, setChats] = useState<Chat[]>([
+    {
+      id: "1",
+      title: "How to center a div?",
+      messages: [
+        {
+          id: "1-1",
+          role: "user",
+          content: "How to center a div both horizontally and vertically?",
+        },
+        {
+          id: "1-2",
+          role: "assistant",
+          content:
+            "You can center a div using flexbox:\n\n```\ndisplay: flex;\njustify-content: center;\nalign-items: center;\n```",
+        },
+      ],
+    },
+    {
+      id: "2",
+      title: "React best practices",
+      messages: [
+        {
+          id: "2-1",
+          role: "user",
+          content: "What are React best practices?",
+        },
+        {
+          id: "2-2",
+          role: "assistant",
+          content:
+            "Some React best practices include:\n1. Using functional components with hooks\n2. Proper state management\n3. Component composition\n4. Avoiding unnecessary re-renders",
+        },
+      ],
+    },
+  ]);
+
+  const [activeChatId, setActiveChatId] = useState<string>("1");
+  const [newMessage, setNewMessage] = useState<string>("");
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState<string>("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(
+        textareaRef.current.scrollHeight,
+        7 * 24,
+      )}px`;
+    }
+  }, [newMessage]);
 
-  const handleSubmit = async (e: React.ChangeEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim()) return;
+  const activeChat = chats.find((chat) => chat.id === activeChatId) || chats[0];
 
-    const userMessage: Message = { role: "user", content: inputValue };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
-    setIsTyping(true);
+  const handleSendMessage = () => {
+    if (!newMessage.trim()) return;
 
-    try {
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+    const updatedChats = chats.map((chat) => {
+      if (chat.id === activeChatId) {
+        const newMessageObj: Message = {
+          id: `msg-${Date.now()}`,
+          role: "user",
+          content: newMessage,
+        };
 
-      const response = await fetch(`${process.env.RAG_DEV_URL}/llama/query`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          question: userMessage.content,
-        }),
-      });
+        const newAssistantResponse: Message = {
+          id: `resp-${Date.now()}`,
+          role: "assistant",
+          content: `I received your message: "${newMessage}". This is a simulated response.`,
+        };
 
-      if (!response.body) {
-        throw new Error("No response body");
+        return {
+          ...chat,
+          title:
+            newMessage.substring(0, 30) + (newMessage.length > 30 ? "..." : ""),
+          messages: [...chat.messages, newMessageObj, newAssistantResponse],
+        };
       }
+      return chat;
+    });
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
+    setChats(updatedChats);
+    setNewMessage("");
+  };
 
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
+  const handleStartEditing = (messageId: string, content: string) => {
+    setEditingMessageId(messageId);
+    setEditContent(content);
+  };
 
-        if (value) {
-          const chunk = decoder.decode(value, { stream: true });
+  const handleSaveEdit = () => {
+    if (!editingMessageId) return;
 
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage.role === "assistant") {
-              lastMessage.content += chunk;
-            }
-            return newMessages;
-          });
+    const updatedChats = chats.map((chat) => {
+      if (chat.id === activeChatId) {
+        const messageIndex = chat.messages.findIndex(
+          (m) => m.id === editingMessageId,
+        );
+        if (messageIndex !== -1) {
+          const updatedMessages = [
+            ...chat.messages.slice(0, messageIndex),
+            { ...chat.messages[messageIndex], content: editContent },
+          ];
+
+          return {
+            ...chat,
+            title:
+              updatedMessages[0]?.content.substring(0, 30) +
+              (updatedMessages[0]?.content.length > 30 ? "..." : ""),
+            messages: updatedMessages,
+          };
         }
       }
-    } catch (error) {
-      console.error("Error fetching response:", error);
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Sorry, an error occurred." },
-      ]);
-    } finally {
-      setIsTyping(false);
+      return chat;
+    });
+
+    setChats(updatedChats);
+    setEditingMessageId(null);
+    setEditContent("");
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    const updatedChats = chats.map((chat) => {
+      if (chat.id === activeChatId) {
+        const messageIndex = chat.messages.findIndex((m) => m.id === messageId);
+        if (messageIndex !== -1) {
+          const updatedMessages = chat.messages.slice(0, messageIndex);
+
+          return {
+            ...chat,
+            title:
+              updatedMessages[0]?.content.substring(0, 30) +
+              (updatedMessages[0]?.content.length > 30 ? "..." : ""),
+            messages: updatedMessages,
+          };
+        }
+      }
+      return chat;
+    });
+
+    setChats(updatedChats);
+
+    if (editingMessageId === messageId) {
+      setEditingMessageId(null);
+      setEditContent("");
     }
   };
 
-  return (
-    <div className="flex flex-col h-[calc(100vh-7.5rem)] bg-[#212121] text-gray-100 font-sans rounded-lg">
-      {/* Header */}
-      <header className="flex items-center justify-center py-4 border-b border-white/10 bg-[#212121] shadow-sm z-10 rounded-lg">
-        <h1 className="text-lg font-medium text-gray-200">Local Llama Chat</h1>
-      </header>
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
-      {/* Chat messages area */}
-      <main className="flex-1 overflow-y-auto w-full max-w-7xl mx-auto px-4 py-8 custom-scrollbar rounded-lg">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center px-4">
-            <div className="bg-white/5 p-4 rounded-2xl mb-4">
-              <svg
-                xmlns="http://www.w3.org/Range"
-                className="w-8 h-8 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-semibold mb-2">
-              How can I help you today?
-            </h2>
-            <p className="text-gray-400 max-w-md">
-              Type a message below to start chatting with your local Llama
-              instance in real-time.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col space-y-6 pb-20">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex gap-4 ${
-                  msg.role === "user" ? "flex-row-reverse" : "flex-row"
+  const createNewChat = () => {
+    const newChat: Chat = {
+      id: `chat-${Date.now()}`,
+      title: "New Conversation",
+      messages: [],
+    };
+
+    setChats([newChat, ...chats]);
+    setActiveChatId(newChat.id);
+  };
+
+  return (
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <div className="w-64 flex flex-col border-r border-sidebar-border bg-sidebar">
+        <div className="p-4 border-b border-sidebar-border">
+          <Button
+            onClick={createNewChat}
+            className="w-full bg-sidebar-primary hover:bg-sidebar-accent text-sidebar-primary-foreground"
+          >
+            <IconPlus size={16} className="mr-2" />
+            New Chat
+          </Button>
+        </div>
+
+        <ScrollArea className="flex-1 p-2">
+          <div className="space-y-1">
+            {chats.map((chat) => (
+              <button
+                key={chat.id}
+                onClick={() => setActiveChatId(chat.id)}
+                className={`w-full text-left p-3 rounded-lg transition-colors ${
+                  activeChatId === chat.id
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "hover:bg-sidebar-accent/50 text-sidebar-foreground"
                 }`}
               >
-                {/* Avatar */}
-                <div
-                  className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    msg.role === "user" ? "bg-blue-600" : "bg-[#10a37f]"
-                  }`}
-                >
-                  {msg.role === "user" ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                  )}
+                <div className="flex items-center gap-2 truncate">
+                  <IconMessage2 size={16} />
+                  <span className="truncate">{chat.title}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        <ScrollArea className="flex-1 p-4 pb-20">
+          <div className="max-w-3xl mx-auto w-full space-y-6">
+            {activeChat.messages.map((message) => (
+              <div key={message.id} className="space-y-2">
+                <div className="flex items-start gap-3">
+                  <Avatar className="w-8 h-8 mt-1">
+                    <AvatarImage src="" alt="User" />
+                    <AvatarFallback>
+                      {message.role === "user" ? "U" : "AI"}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <Card className="flex-1 bg-card border border-border">
+                    <CardContent className="p-4">
+                      {editingMessageId === message.id ? (
+                        <div className="space-y-3">
+                          <Textarea
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSaveEdit();
+                              }
+                            }}
+                            autoFocus
+                            className="min-h-25"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingMessageId(null);
+                                setEditContent("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button size="sm" onClick={handleSaveEdit}>
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+
+                          {message.role === "user" && (
+                            <div className="flex justify-end gap-2 mt-2">
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 p-0 hover:bg-muted"
+                                      onClick={() =>
+                                        handleStartEditing(
+                                          message.id,
+                                          message.content,
+                                        )
+                                      }
+                                    >
+                                      <IconEdit size={14} />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Edit</TooltipContent>
+                                </Tooltip>
+
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-7 w-7 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                      onClick={() =>
+                                        handleDeleteMessage(message.id)
+                                      }
+                                    >
+                                      <IconTrash size={14} />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Delete</TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
 
-                {/* Message Bubble */}
-                <div
-                  className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-3.5 ${
-                    msg.role === "user"
-                      ? "bg-[#2f2f2f] text-gray-100 rounded-tr-sm"
-                      : "bg-transparent text-gray-100"
-                  }`}
-                >
-                  {msg.role === "assistant" &&
-                  msg.content === "" &&
-                  isTyping &&
-                  index === messages.length - 1 ? (
-                    <div className="flex space-x-1.5 h-6 items-center pt-1">
-                      <div
-                        className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "0ms" }}
-                      ></div>
-                      <div
-                        className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "150ms" }}
-                      ></div>
-                      <div
-                        className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "300ms" }}
-                      ></div>
-                    </div>
-                  ) : (
-                    <div className="whitespace-pre-wrap leading-relaxed">
-                      {msg.content}
-                    </div>
+                {message.role === "user" &&
+                  message.id !==
+                    activeChat.messages[activeChat.messages.length - 1]?.id && (
+                    <Separator className="my-2" />
                   )}
-                </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
-          </div>
-        )}
-      </main>
 
-      {/* Input area */}
-      <div className="w-full max-w-4xl mx-auto p-4 bg-[#212121] fixed bottom-0 left-0 right-0">
-        <form
-          onSubmit={handleSubmit}
-          className="relative flex items-center bg-[#2f2f2f] rounded-3xl border border-white/10 focus-within:border-white/20 shadow-lg"
-        >
-          <input
-            type="text"
-            className="flex-1 bg-transparent text-gray-100 placeholder-gray-500 px-6 py-4 outline-none rounded-3xl"
-            placeholder="Message Local Llama..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            disabled={isTyping}
-          />
-          <button
-            type="submit"
-            disabled={!inputValue.trim() || isTyping}
-            className="absolute right-2 p-2 bg-white text-black rounded-full disabled:bg-[#404040] disabled:text-gray-500 transition-colors mr-1"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"
+            {activeChat.messages.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <IconMessageCircle
+                  size={48}
+                  className="mx-auto mb-4 opacity-50"
+                />
+                <p>Start a new conversation by typing a message below</p>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* Input Area */}
+        <div className="p-4 border-t border-border bg-background">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex gap-2">
+              <Textarea
+                ref={textareaRef}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message here..."
+                className="flex-1 min-h-11 max-h-42 resize-none py-3 px-4"
               />
-            </svg>
-          </button>
-        </form>
-        <div className="text-center mt-3 text-xs text-gray-500">
-          Local Llama can make mistakes. Consider verifying important
-          information.
+              <Button
+                onClick={handleSendMessage}
+                disabled={!newMessage.trim()}
+                className="self-end bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                <IconSend size={18} />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Press Enter to send, Shift+Enter for new line
+            </p>
+          </div>
         </div>
       </div>
     </div>
