@@ -24,10 +24,15 @@ export async function POST(req: Request) {
         "Content-Type": "text/plain",
       },
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 },
-    );
+  } catch (error: unknown) {
+    return error instanceof Error
+      ? NextResponse.json(
+          { success: false, error: error.message },
+          { status: 500 },
+        )
+      : NextResponse.json(
+          { success: false, error: "Unknown error" },
+          { status: 500 },
+        );
   }
 }

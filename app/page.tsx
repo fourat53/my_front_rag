@@ -1,8 +1,3 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
-import { redirect } from "next/navigation";
-
-export default function HomePage() {
-  return <div></div>;
+export default function ChatPage() {
+  return <div>Hello World!</div>;
 }
