@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
-import { Navbar } from "@/components/navbar/Navbar";
+// import { Navbar } from "@/components/navbar/Navbar";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -32,10 +32,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <Navbar />
-          <div className="px-8 mt-28 min-h-[calc(100vh-7rem)]">
-            {children}
-          </div>
+          {/* <Navbar /> 
+          <div className="px-8 mt-28 min-h-[calc(100vh-7rem)]">*/}
+          {children}
+          {/* </div> */}
         </ThemeProvider>
       </body>
     </html>

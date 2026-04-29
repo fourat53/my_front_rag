@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { signUp, signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { IconBrandGithubFilled, IconBrandGoogle } from "@tabler/icons-react";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -22,7 +23,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await signUp.email({ name, email, password });
@@ -42,8 +43,10 @@ export default function RegisterPage() {
     <div className="h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Create an account</CardTitle>
-          <CardDescription>
+          <CardTitle className="mb-2 text-center text-xl">
+            Create an account
+          </CardTitle>
+          <CardDescription className="-mb-2">
             Enter your details below to get started
           </CardDescription>
         </CardHeader>
@@ -83,7 +86,7 @@ export default function RegisterPage() {
                   required
                 />
               </Field>
-              <Button type="submit" disabled={loading} className="w-full">
+              <Button type="submit" loading={loading} className="w-full">
                 {loading ? "Creating account..." : "Create account"}
               </Button>
             </FieldGroup>
@@ -94,7 +97,7 @@ export default function RegisterPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-sidebar px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
@@ -103,12 +106,14 @@ export default function RegisterPage() {
           <div className="grid grid-cols-2 gap-4">
             <Button
               variant="outline"
+              icon={<IconBrandGithubFilled />}
               onClick={() => handleOAuthLogin("github")}
             >
               GitHub
             </Button>
             <Button
               variant="outline"
+              icon={<IconBrandGoogle />}
               onClick={() => handleOAuthLogin("google")}
             >
               Google

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { IconBrandGithubFilled, IconBrandGoogle } from "@tabler/icons-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -21,7 +22,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await signIn.email({ email, password });
@@ -41,8 +42,10 @@ export default function LoginPage() {
     <div className="h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>
+          <CardTitle className="mb-2 text-center text-xl">
+            Login to your account
+          </CardTitle>
+          <CardDescription className="-mb-2">
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
@@ -71,7 +74,7 @@ export default function LoginPage() {
                   required
                 />
               </Field>
-              <Button type="submit" disabled={loading} className="w-full">
+              <Button type="submit" loading={loading} className="w-full">
                 {loading ? "Signing in..." : "Sign in"}
               </Button>
             </FieldGroup>
@@ -82,7 +85,7 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-sidebar px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
@@ -91,12 +94,14 @@ export default function LoginPage() {
           <div className="grid grid-cols-2 gap-4">
             <Button
               variant="outline"
+              icon={<IconBrandGithubFilled />}
               onClick={() => handleOAuthLogin("github")}
             >
               GitHub
             </Button>
             <Button
               variant="outline"
+              icon={<IconBrandGoogle />}
               onClick={() => handleOAuthLogin("google")}
             >
               Google

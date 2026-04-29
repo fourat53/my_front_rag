@@ -1,7 +1,6 @@
 import { createAuthClient } from "better-auth/react";
+import { baseURL } from "./env-vars";
 
-export const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_PROD_URL || process.env.NEXT_PUBLIC_DEV_URL,
-});
+export const authClient = createAuthClient({ baseURL });
 
 export const { signIn, signUp, useSession, signOut } = authClient;
