@@ -24,7 +24,7 @@ export default function LoginPage() {
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await signIn.email({ email, password });
+    const { error } = await signIn.email({ email, password });
     if (error) {
       alert(error.message);
     } else {
@@ -42,7 +42,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
+          <CardDescription>
+            Enter your credentials to access your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleEmailLogin}>
@@ -80,15 +82,23 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" onClick={() => handleOAuthLogin("github")}>
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthLogin("github")}
+            >
               GitHub
             </Button>
-            <Button variant="outline" onClick={() => handleOAuthLogin("google")}>
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthLogin("google")}
+            >
               Google
             </Button>
           </div>

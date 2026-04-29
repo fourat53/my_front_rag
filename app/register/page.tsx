@@ -25,7 +25,7 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await signUp.email({ name, email, password });
+    const { error } = await signUp.email({ name, email, password });
     if (error) {
       alert(error.message);
     } else {
@@ -43,7 +43,9 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
-          <CardDescription>Enter your details below to get started</CardDescription>
+          <CardDescription>
+            Enter your details below to get started
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister}>
@@ -92,15 +94,23 @@ export default function RegisterPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" onClick={() => handleOAuthLogin("github")}>
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthLogin("github")}
+            >
               GitHub
             </Button>
-            <Button variant="outline" onClick={() => handleOAuthLogin("google")}>
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthLogin("google")}
+            >
               Google
             </Button>
           </div>
