@@ -14,7 +14,11 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { IconBrandGithubFilled, IconBrandGoogle } from "@tabler/icons-react";
+import {
+  IconBrandGithubFilled,
+  IconBrandGoogleFilled,
+} from "@tabler/icons-react";
+import ThemeSwitch from "@/components/navbar/ThemeSwitch";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -40,6 +44,7 @@ export default function LoginPage() {
 
   return (
     <div className="h-screen flex items-center justify-center p-4">
+      <ThemeSwitch className="absolute top-4 right-4" />
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="mb-2 text-center text-xl">
@@ -68,14 +73,14 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="••••••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </Field>
               <Button type="submit" loading={loading} className="w-full">
-                {loading ? "Signing in..." : "Sign in"}
+                {loading ? "Signing in" : "Sign in"}
               </Button>
             </FieldGroup>
           </form>
@@ -96,12 +101,13 @@ export default function LoginPage() {
               variant="outline"
               icon={<IconBrandGithubFilled />}
               onClick={() => handleOAuthLogin("github")}
+              className="bg-foreground hover:bg-foreground/70 dark:text-black dark:hover:text-black"
             >
               GitHub
             </Button>
             <Button
               variant="outline"
-              icon={<IconBrandGoogle />}
+              icon={<IconBrandGoogleFilled />}
               onClick={() => handleOAuthLogin("google")}
             >
               Google

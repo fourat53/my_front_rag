@@ -14,7 +14,11 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { signUp, signIn } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { IconBrandGithubFilled, IconBrandGoogle } from "@tabler/icons-react";
+import {
+  IconBrandGithubFilled,
+  IconBrandGoogleFilled,
+} from "@tabler/icons-react";
+import ThemeSwitch from "@/components/navbar/ThemeSwitch";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -41,6 +45,7 @@ export default function RegisterPage() {
 
   return (
     <div className="h-screen flex items-center justify-center p-4">
+      <ThemeSwitch className="absolute top-4 right-4" />
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="mb-2 text-center text-xl">
@@ -80,14 +85,14 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="••••••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </Field>
               <Button type="submit" loading={loading} className="w-full">
-                {loading ? "Creating account..." : "Create account"}
+                {loading ? "Creating account" : "Create account"}
               </Button>
             </FieldGroup>
           </form>
@@ -97,7 +102,7 @@ export default function RegisterPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-sidebar px-2 text-muted-foreground">
+              <span className="bg-card px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
@@ -105,15 +110,15 @@ export default function RegisterPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <Button
-              variant="outline"
               icon={<IconBrandGithubFilled />}
               onClick={() => handleOAuthLogin("github")}
+              className="bg-foreground hover:bg-foreground/70 dark:text-black dark:hover:text-black"
             >
               GitHub
             </Button>
             <Button
               variant="outline"
-              icon={<IconBrandGoogle />}
+              icon={<IconBrandGoogleFilled />}
               onClick={() => handleOAuthLogin("google")}
             >
               Google
