@@ -43,11 +43,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center p-4">
+    <div className="flex justify-center items-center p-4 h-screen">
       <ThemeSwitch className="absolute top-4 right-4" />
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="mb-2 text-center text-xl">
+          <CardTitle className="mb-2 text-xl text-center">
             Login to your account
           </CardTitle>
           <CardDescription className="-mb-2">
@@ -86,11 +86,11 @@ export default function LoginPage() {
           </form>
 
           <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
+            <div className="flex absolute inset-0 items-center">
               <span className="w-full border-t" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-sidebar px-2 text-muted-foreground">
+            <div className="flex relative justify-center text-xs uppercase">
+              <span className="px-2 bg-sidebar text-muted-foreground">
                 Or continue with
               </span>
             </div>
@@ -114,7 +114,7 @@ export default function LoginPage() {
             </Button>
           </div>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-6 text-sm text-center">
             Don&apos;t have an account?{" "}
             <Link href="/register" className="text-primary hover:underline">
               Sign up

@@ -32,12 +32,15 @@ function SelectTrigger({
   className,
   size = "default",
   children,
+  id,
   ...props
 }: SelectPrimitive.Trigger.Props & {
   size?: "sm" | "default";
 }) {
+  const _id = React.useId();
   return (
     <SelectPrimitive.Trigger
+      id={id || _id}
       data-slot="select-trigger"
       data-size={size}
       className={cn(

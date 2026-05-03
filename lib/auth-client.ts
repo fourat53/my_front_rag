@@ -1,5 +1,5 @@
 import { createAuthClient } from "better-auth/react";
-import { baseURL } from "./env-vars";
+import { baseURL } from "../public/data/env-vars";
 
 export const authClient = createAuthClient({ baseURL });
 

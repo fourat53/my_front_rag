@@ -1,29 +1,5 @@
-type Provider = {
-  id: string;
-  name: string;
-};
-
-type Model = {
-  id: string;
-  name: string;
-  providerId: string;
-};
-
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: string;
-};
-
-type Conversation = {
-  id: string;
-  title: string;
-  updatedAt: string;
-  messages: Message[];
-  providerId: string;
-  modelId: string;
-};
+import { Conversation } from "@/types/conversation";
+import { Model, Provider } from "@/types/message";
 
 const dummyProviders: Provider[] = [
   { id: "ollama", name: "Ollama" },
@@ -61,8 +37,7 @@ const dummyConversations: Conversation[] = [
       {
         id: "msg-1",
         role: "user",
-        content: `
-How do I set up react-markdown with syntax highlighting?
+        content: `How do I set up react-markdown with syntax highlighting?
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -96,8 +71,7 @@ const MarkdownViewer = ({ content }) => {
       {content}
     </ReactMarkdown>
   );
-};
-        `,
+};`,
         timestamp: "2026-04-29T09:55:00Z",
       },
       {
@@ -171,12 +145,4 @@ You can use this component to render any markdown string.`,
   },
 ];
 
-export {
-  type Provider,
-  type Model,
-  type Message,
-  type Conversation,
-  dummyProviders,
-  dummyModels,
-  dummyConversations,
-};
+export { dummyProviders, dummyModels, dummyConversations };

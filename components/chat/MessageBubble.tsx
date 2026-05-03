@@ -1,54 +1,55 @@
 "use client";
 
-import { IconRobot, IconCopy, IconEdit, IconUser } from "@tabler/icons-react";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { IconRobot, IconCopy, IconEdit } from "@tabler/icons-react";
 import { ComponentPropsWithoutRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Message } from "@/lib/dummy-data";
 import ReactMarkdown from "react-markdown";
+import { Message } from "@/types/message";
 import remarkGfm from "remark-gfm";
-import Image from "next/image";
 import clsx from "clsx";
+import Image from "next/image";
+import { useSession } from "@/lib/auth-client";
 
-interface MessageBubbleProps {
-  message: Message;
-  userImage?: string | null;
-}
-
-export function MessageBubble({ message, userImage }: MessageBubbleProps) {
+export function MessageBubble({ message }: { message: Message }) {
+  const { data: session } = useSession();
   const isUser = message.role === "user";
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(message.content);
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
   };
 
   return (
-    <div className="flex flex-col gap-1 rounded-2xl w-full max-w-3xl mx-auto group transition-colors">
+    <div className="flex flex-col gap-1 px-5 mx-auto w-full max-w-3xl rounded-2xl transition-colors group">
       <div className="flex-1 space-y-2 min-w-0">
-        <div className="prose prose-sm dark:prose-invert max-w-none prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed">
+        <div className="max-w-none prose prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed">
           {isUser ? (
-            <div className="w-full flex justify-end gap-2">
-              <div className="whitespace-pre-wrap p-5 bg-card shadow-sm border-2 border-border rounded-2xl">
+            <div className="flex gap-2 justify-end w-full">
+              <div className="whitespace-pre-wrap px-4.5 py-3.5 bg-sidebar shadow-sm border-2 border-border rounded-2xl">
                 {message.content}
               </div>
-              <div className="size-8 rounded-full bg-primary/20 text-primary flex items-center justify-center overflow-hidden">
-                {userImage ? (
+              <div className="flex overflow-hidden justify-center items-center rounded-full size-8">
+                {session && session.user.image ? (
                   <Image
-                    src={userImage}
-                    alt="User"
-                    className="object-cover"
+                    src={session.user.image}
+                    alt="User avatar"
                     width={32}
                     height={32}
                   />
                 ) : (
-                  <IconUser size={18} />
+                  session &&
+                  session.user.name && (
+                    <p className="flex justify-center items-center text-base font-bold rounded-full size-8 bg-primary/20 text-primary">
+                      {session.user.name?.[0].toUpperCase()}
+                    </p>
+                  )
                 )}
-              </div>
+              </div>{" "}
             </div>
           ) : (
-            <div className="flex gap-2">
-              <div className="min-w-8 size-8 rounded-full bg-foreground text-background flex items-center justify-center">
+            <div className="flex gap-2 pr-10">
+              <div className="flex justify-center items-center rounded-full min-w-8 size-8 bg-foreground text-background">
                 <IconRobot size={16} />
               </div>
               <div className="w-full">
@@ -69,7 +70,7 @@ export function MessageBubble({ message, userImage }: MessageBubbleProps) {
                       } = props;
                       const match = /language-(\\w+)/.exec(className || "");
                       return match ? (
-                        <div className="rounded-lg overflow-hidden my-4 border border-border">
+                        <div className="overflow-hidden my-4 rounded-lg border border-border">
                           <SyntaxHighlighter
                             {...rest}
                             PreTag="div"
@@ -85,13 +86,21 @@ export function MessageBubble({ message, userImage }: MessageBubbleProps) {
                           </SyntaxHighlighter>
                         </div>
                       ) : (
-                        <div className="my-2 bg-card/65 shadow-sm border border-border px-4.5 py-3 rounded-2xl">
-                          <code
-                            {...rest}
-                            className="rounded-md text-sm font-mono"
-                          >
-                            {children}
-                          </code>
+                        <div className="my-2 rounded-2xl border shadow-sm border-border">
+                          <div className="flex justify-between items-center py-1 pr-2 pl-3 rounded-t-2xl border-b border-border text-muted-foreground bg-sidebar">
+                            <p>Code</p>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 p-0.5 hover:bg-secondary/80 dark:hover:bg-secondary/70"
+                              onClick={() => handleCopy(String(children))}
+                            >
+                              <IconCopy size={16} />
+                            </Button>
+                          </div>
+                          <div className="px-3 py-2 dark:bg-sidebar/40">
+                            <code {...rest}>{String(children)}</code>
+                          </div>
                         </div>
                       );
                     },
@@ -130,7 +139,7 @@ export function MessageBubble({ message, userImage }: MessageBubbleProps) {
           variant="ghost"
           size="icon"
           className="size-8 p-0.5 hover:bg-secondary/80 dark:hover:bg-secondary/70"
-          onClick={handleCopy}
+          onClick={() => handleCopy(message.content)}
         >
           <IconCopy size={16} />
         </Button>

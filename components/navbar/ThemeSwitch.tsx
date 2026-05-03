@@ -45,7 +45,7 @@ function ThemeButton({ t, labeled }: { t: ThemesType; labeled?: boolean }) {
         "rounded-full p-1 size-8",
         mounted &&
           theme === t.mode &&
-          "bg-accent hover:bg-accent border-2 text-white hover:text-white",
+          "bg-primary text-white hover:bg-primary hover:text-white",
         labeled && "w-full flex items-center gap-2",
       )}
       onClick={() => setTheme(t.mode)}

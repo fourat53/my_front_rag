@@ -1,7 +1,11 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
 import { MongoClient } from "mongodb";
-import { baseURL, githubClientID, githubClientSecret } from "./env-vars";
+import {
+  baseURL,
+  githubClientID,
+  githubClientSecret,
+} from "../public/data/env-vars";
 
 const client = new MongoClient(process.env.MONGODB_URL as string);
 const db = client.db();

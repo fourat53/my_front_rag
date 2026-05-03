@@ -2,10 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
+import { IconLogout } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function LogoutButton({ className }: { className?: string }) {
+export function LogoutButton({
+  className,
+  variant = "default",
+}: {
+  className?: string;
+  variant?: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -21,8 +29,12 @@ export function LogoutButton({ className }: { className?: string }) {
   };
 
   return (
-    <Button className={className} loading={loading} onClick={logout}>
-      Logout
+    <Button
+      className={cn(variant === "icon" && "size-9 rounded-xl", className)}
+      loading={loading}
+      onClick={logout}
+    >
+      {variant === "default" ? "Logout" : !loading && <IconLogout />}
     </Button>
   );
 }

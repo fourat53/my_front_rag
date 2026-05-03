@@ -1,9 +1,13 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import ThemeSwitch from "@/components/navbar/ThemeSwitch";
 import { LogoutButton } from "@/components/layout/logout-button";
+import { dummyConversations } from "@/public/data/dummy-data";
+import { IconMessage, IconPlus } from "@tabler/icons-react";
+import ThemeSwitch from "@/components/navbar/ThemeSwitch";
+import { Button } from "@/components/ui/button";
+import { useSession } from "@/lib/auth-client";
+import Image from "next/image";
+import Link from "next/link";
 import {
   Sidebar,
   SidebarContent,
@@ -15,43 +19,30 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import {
-  IconMessage,
-  IconPlus,
-  IconSettings,
-  IconUser,
-} from "@tabler/icons-react";
-import { dummyConversations } from "@/lib/dummy-data";
-
-interface SessionData {
-  user: {
-    name?: string | null;
-    email: string;
-  };
-}
 
 interface ChatSidebarProps {
   activeId: string;
   onSelect: (id: string) => void;
-  session: SessionData | null;
 }
 
-export function ChatSidebar({ activeId, onSelect, session }: ChatSidebarProps) {
+export function ChatSidebar({ activeId, onSelect }: ChatSidebarProps) {
+  const { data: session } = useSession();
+
   return (
-    <Sidebar variant="inset" collapsible="offcanvas" className="p-0 m-0">
-      <SidebarHeader className="h-16 flex items-center justify-between border-b border-border px-4 flex-row">
+    <Sidebar variant="inset" collapsible="offcanvas" className="p-0 pb-2.5 m-0">
+      <SidebarHeader className="flex flex-row justify-between items-center px-4 h-16">
         <h2 className="font-bold text-xl tracking-tight truncate flex-1 group-data-[collapsible=icon]:hidden">
           Chat AI
         </h2>
         <ThemeSwitch className="group-data-[collapsible=icon]:hidden" />
       </SidebarHeader>
-
+      <div className="px-8 border-b border-border" />
       <SidebarContent>
         <SidebarGroup>
           <div className="px-2 py-2 group-data-[collapsible=icon]:hidden">
             <Button
               variant="default"
-              className="w-full flex items-center justify-start gap-2"
+              className="flex gap-2 justify-start items-center w-full"
               onClick={() => onSelect("")}
             >
               <IconPlus size={18} />
@@ -62,7 +53,7 @@ export function ChatSidebar({ activeId, onSelect, session }: ChatSidebarProps) {
             <Button
               variant="default"
               size="icon"
-              className="rounded-full w-8 h-8"
+              className="w-8 h-8 rounded-full"
               onClick={() => onSelect("")}
             >
               <IconPlus size={18} />
@@ -77,6 +68,7 @@ export function ChatSidebar({ activeId, onSelect, session }: ChatSidebarProps) {
                     onClick={() => onSelect(conv.id)}
                     isActive={activeId === conv.id}
                     tooltip={conv.title}
+                    className="rounded-md"
                   >
                     <IconMessage size={16} />
                     <span className="truncate">{conv.title}</span>
@@ -88,42 +80,38 @@ export function ChatSidebar({ activeId, onSelect, session }: ChatSidebarProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-border p-4">
+      <SidebarFooter className="p-4 border-t border-border">
         {session ? (
           <div className="flex flex-col gap-2 group-data-[collapsible=icon]:items-center">
-            <div className="flex items-center gap-2 px-2 py-1 text-sm text-muted-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-              <IconUser size={16} />
-              <span className="truncate group-data-[collapsible=icon]:hidden">
-                {session.user.name || session.user.email}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-1 justify-start gap-2 text-muted-foreground group-data-[collapsible=icon]:hidden"
-              >
-                <IconSettings size={16} />
-                Settings
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden group-data-[collapsible=icon]:flex w-8 h-8 text-muted-foreground"
-              >
-                <IconSettings size={16} />
-              </Button>
-              <div className="group-data-[collapsible=icon]:hidden w-full flex">
-                <LogoutButton />
+            <div className="flex justify-between items-center gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+                <div className="flex overflow-hidden justify-center items-center rounded-full size-9">
+                  {session.user.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt="User avatar"
+                      width={36}
+                      height={36}
+                    />
+                  ) : (
+                    session.user.name && (
+                      <p className="flex justify-center items-center text-base font-bold rounded-full size-9 bg-primary/20 text-primary">
+                        {session.user.name?.[0].toUpperCase()}
+                      </p>
+                    )
+                  )}
+                </div>
+
+                <span className="truncate group-data-[collapsible=icon]:hidden">
+                  {session.user.name || session.user.email}
+                </span>
               </div>
-              <div className="hidden group-data-[collapsible=icon]:flex">
-                <LogoutButton />
-              </div>
+              <LogoutButton variant="icon" />
             </div>
           </div>
         ) : (
           <div className="text-center space-y-3 group-data-[collapsible=icon]:hidden">
-            <p className="text-xs text-muted-foreground px-2">
+            <p className="px-2 text-xs text-muted-foreground">
               Sign in to save your chat history and sync across devices.
             </p>
             <Link href="/login" className="block">
