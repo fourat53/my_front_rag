@@ -1,19 +1,12 @@
-type Message = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: string;
-};
+import { z } from "zod";
 
-type Provider = {
-  id: string;
-  name: string;
-};
+const MessageSchema = z.object({
+  id: z.string(),
+  role: z.enum(["user", "assistant"]),
+  content: z.string(),
+  timestamp: z.string(),
+});
 
-type Model = {
-  id: string;
-  name: string;
-  providerId: string;
-};
+type Message = z.infer<typeof MessageSchema>;
 
-export { type Message, type Provider, type Model };
+export { type Message, MessageSchema };

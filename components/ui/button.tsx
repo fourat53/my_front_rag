@@ -68,7 +68,7 @@ function Button({
       data-slot="button"
       data-icon={showIcon ? `inline-${iconPosition}` : undefined}
       className={cn(buttonVariants({ variant, size, className }))}
-      disabled={loading || disabled}
+      disabled={loading || disabled || false}
       {...props}
     >
       {iconPosition === "start" &&

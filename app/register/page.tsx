@@ -18,7 +18,7 @@ import {
   IconBrandGithubFilled,
   IconBrandGoogleFilled,
 } from "@tabler/icons-react";
-import ThemeSwitch from "@/components/navbar/ThemeSwitch";
+import ThemeSwitch from "@/components/reusable/ThemeSwitch";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");

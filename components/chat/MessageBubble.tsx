@@ -5,12 +5,12 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { IconRobot, IconCopy, IconEdit } from "@tabler/icons-react";
 import { ComponentPropsWithoutRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/lib/auth-client";
 import ReactMarkdown from "react-markdown";
 import { Message } from "@/types/message";
 import remarkGfm from "remark-gfm";
-import clsx from "clsx";
 import Image from "next/image";
-import { useSession } from "@/lib/auth-client";
+import clsx from "clsx";
 
 export function MessageBubble({ message }: { message: Message }) {
   const { data: session } = useSession();

@@ -1,12 +1,16 @@
-import { Message } from "./message";
+import { z } from "zod";
+import { MessageSchema } from "./message";
 
-type Conversation = {
-  id: string;
-  title: string;
-  updatedAt: string;
-  messages: Message[];
-  providerId: string;
-  modelId: string;
-};
+const ConversationSchema = z.object({
+  _id: z.string(),
+  userId: z.string(),
+  title: z.string(),
+  providerId: z.string(),
+  modelId: z.string(),
+  messages: z.array(MessageSchema),
+  updatedAt: z.string(),
+});
 
-export { type Conversation };
+type Conversation = z.infer<typeof ConversationSchema>;
+
+export { type Conversation, ConversationSchema };

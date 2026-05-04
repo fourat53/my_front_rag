@@ -1,9 +1,8 @@
 "use client";
 
-import { LogoutButton } from "@/components/layout/logout-button";
-import { dummyConversations } from "@/public/data/dummy-data";
-import { IconMessage, IconPlus } from "@tabler/icons-react";
-import ThemeSwitch from "@/components/navbar/ThemeSwitch";
+import { LogoutButton } from "@/components/reusable/logout-button";
+import { IconMessage, IconPlus, IconTrash } from "@tabler/icons-react";
+import ThemeSwitch from "@/components/reusable/ThemeSwitch";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import Image from "next/image";
@@ -19,13 +18,21 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
+import { Conversation } from "@/types/conversation";
 
 interface ChatSidebarProps {
   activeId: string;
+  conversations: Conversation[];
   onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function ChatSidebar({ activeId, onSelect }: ChatSidebarProps) {
+export function ChatSidebar({
+  activeId,
+  conversations,
+  onSelect,
+  onDelete,
+}: ChatSidebarProps) {
   const { data: session } = useSession();
 
   return (
@@ -62,17 +69,31 @@ export function ChatSidebar({ activeId, onSelect }: ChatSidebarProps) {
 
           <SidebarGroupContent className="px-2">
             <SidebarMenu>
-              {dummyConversations.map((conv) => (
-                <SidebarMenuItem key={conv.id}>
+              {conversations.map((conv) => (
+                <SidebarMenuItem
+                  key={conv._id}
+                  className="group/item flex items-center justify-between"
+                >
                   <SidebarMenuButton
-                    onClick={() => onSelect(conv.id)}
-                    isActive={activeId === conv.id}
+                    onClick={() => onSelect(conv._id)}
+                    isActive={activeId === conv._id}
                     tooltip={conv.title}
-                    className="rounded-md"
+                    className="rounded-md flex-1"
                   >
                     <IconMessage size={16} />
                     <span className="truncate">{conv.title}</span>
                   </SidebarMenuButton>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover/item:opacity-100 size-7"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(conv._id);
+                    }}
+                  >
+                    <IconTrash size={14} />
+                  </Button>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

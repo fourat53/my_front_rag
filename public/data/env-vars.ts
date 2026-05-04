@@ -12,4 +12,6 @@ const githubClientSecret = isDev
   ? process.env.GITHUB_DEV_CLIENT_SECRET
   : process.env.GITHUB_PROD_CLIENT_SECRET;
 
-export { baseURL, githubClientID, githubClientSecret };
+const ragUrl = isDev ? process.env.RAG_DEV_URL : process.env.RAG_PROD_URL;
+
+export { baseURL, githubClientID, githubClientSecret, ragUrl };

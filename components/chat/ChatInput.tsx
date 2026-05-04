@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { IconSend, IconLink, IconSearch } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -9,50 +9,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IconSend, IconLink, IconSearch } from "@tabler/icons-react";
-import { dummyModels } from "@/public/data/dummy-data";
-import { Model, Provider } from "@/types/message";
+import { Model } from "@/types/model";
 
 interface ChatInputProps {
-  onSend: (content: string) => void;
-  selectedModel: Model;
-  selectedProvider: Provider;
+  input: string;
+  handleSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
+  isLoading?: boolean;
+  stop?: () => void;
+  selectedModel: Model | null;
   setSelectedModel: (model: Model) => void;
+  availableModels: Model[];
+  isLoadingModels?: boolean;
+  handleInputChange: (
+    e:
+      | React.ChangeEvent<HTMLTextAreaElement>
+      | React.ChangeEvent<HTMLInputElement>,
+  ) => void;
 }
 
 export function ChatInput({
-  onSend,
+  input,
+  handleInputChange,
+  handleSubmit,
+  isLoading,
+  stop,
   selectedModel,
-  selectedProvider,
   setSelectedModel,
+  availableModels,
+  isLoadingModels,
 }: ChatInputProps) {
-  const [content, setContent] = useState("");
-
-  const handleSend = () => {
-    if (!content.trim()) return;
-    onSend(content.trim());
-    setContent("");
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      if (isLoading && stop) {
+        stop();
+      } else if (input) {
+        handleSubmit(e as unknown as React.SubmitEvent<HTMLFormElement>);
+      }
     }
   };
 
-  const availableModels = dummyModels.filter(
-    (m) => m.providerId === selectedProvider?.id,
-  );
-
   return (
-    <div className="mx-auto w-full max-w-3xl rounded-3xl border shadow-xl transition-all bg-card border-border focus-within:ring-2 focus-within:ring-ring/50">
+    <form
+      onSubmit={handleSubmit}
+      className="mx-auto w-full max-w-3xl rounded-3xl border shadow-xl transition-all bg-card border-border focus-within:ring-2 focus-within:ring-ring/50"
+    >
       <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
+        value={input}
+        onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         placeholder="Ask anything..."
-        className="w-full max-h-64 min-h-[60px] resize-none p-4 outline-none text-sm placeholder:text-muted-foreground"
+        className="w-full max-h-64 min-h-15 resize-none p-4 outline-none text-sm placeholder:text-muted-foreground"
         rows={1}
         style={{ height: "auto" }}
         onInput={(e) => {
@@ -72,7 +79,7 @@ export function ChatInput({
             <IconLink size={20} />
           </Button>
 
-          <div className="mx-0.5 w-px h-4 bg-border" />
+          <div className="mx-px w-px h-4 bg-border" />
 
           <Button
             variant="ghost"
@@ -82,42 +89,54 @@ export function ChatInput({
             <IconSearch size={20} />
           </Button>
 
-          <div className="mx-0.5 w-px h-4 bg-border" />
+          <div className="mx-px w-px h-4 bg-border" />
 
-          <Select
-            value={selectedModel?.id}
-            onValueChange={(val) => {
-              const model = dummyModels.find((m) => m.id === val);
-              if (model) {
-                setSelectedModel(model);
-              }
-            }}
-          >
-            <SelectTrigger
-              size="sm"
-              className="w-fit max-w-[160px] h-8 bg-transparent border-none shadow-none text-xs hover:bg-accent hover:text-white focus-visible:ring-0"
+          {isLoadingModels ? (
+            <div className="w-48 h-8 bg-muted rounded-full animate-pulse" />
+          ) : (
+            <Select
+              value={selectedModel?.id || ""}
+              onValueChange={(val) => {
+                const model = availableModels.find((m) => m.id === val);
+                if (model) {
+                  setSelectedModel(model);
+                }
+              }}
+              disabled={availableModels.length === 0}
             >
-              <SelectValue placeholder="Model" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableModels.map((m) => (
-                <SelectItem key={m.id} value={m.id}>
-                  {m.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger className="w-48 h-8 bg-transparent border-none shadow-none text-xs hover:bg-accent hover:text-white focus-visible:ring-0">
+                <SelectValue
+                  placeholder={
+                    availableModels.length === 0 ? "No models" : "Model"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {availableModels.map((m, index) => (
+                  <SelectItem key={index} value={m.id}>
+                    <p title={m.name} className="truncate max-w-38">
+                      {m.name}
+                    </p>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <Button
-          onClick={handleSend}
-          disabled={!content.trim()}
+          type={isLoading ? "button" : "submit"}
+          onClick={isLoading ? stop : undefined}
           size="icon"
           className="rounded-full size-9"
         >
-          <IconSend size={16} />
+          {isLoading ? (
+            <div className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+          ) : (
+            <IconSend size={16} />
+          )}
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
