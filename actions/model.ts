@@ -1,19 +1,21 @@
 "use server";
 
 import { Model } from "@/types/model";
-import { ragUrl } from "@/public/data/env-vars";
 
 export async function fetchModelsFromProvider(
   providerId: string,
 ): Promise<Model[]> {
   try {
-    const response = await fetch(`${ragUrl}/models/${providerId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${process.env.RAG_URL}/models/${providerId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
       },
-      cache: "no-store",
-    });
+    );
 
     if (!response.ok) {
       console.error(

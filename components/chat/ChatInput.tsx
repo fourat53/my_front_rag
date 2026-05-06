@@ -125,17 +125,13 @@ export function ChatInput({
         </div>
 
         <Button
-          type={isLoading ? "button" : "submit"}
           onClick={isLoading ? stop : undefined}
+          disabled={input.trim() === ""}
+          loading={isLoading}
+          icon={<IconSend size={16} />}
           size="icon"
           className="rounded-full size-9"
-        >
-          {isLoading ? (
-            <div className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-          ) : (
-            <IconSend size={16} />
-          )}
-        </Button>
+        />
       </div>
     </form>
   );

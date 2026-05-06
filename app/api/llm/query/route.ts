@@ -1,5 +1,3 @@
-import { ragUrl } from "@/public/data/env-vars";
-
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -58,11 +56,11 @@ export async function POST(req: Request) {
         question.substring(0, 100) + (question.length > 100 ? "..." : ""),
     });
 
-    if (!ragUrl) {
+    if (!process.env.RAG_URL) {
       return new Response(
         JSON.stringify({
           error: "RAG service URL is not configured",
-          details: "Set RAG_DEV_URL or RAG_PROD_URL in the Next.js environment",
+          details: "Set RAG_URL in the Next.js environment",
         }),
         { status: 502, headers: { "Content-Type": "application/json" } },
       );
@@ -72,7 +70,7 @@ export async function POST(req: Request) {
     const timeout = setTimeout(() => controller.abort(), 60000);
 
     try {
-      const response = await fetch(`${ragUrl}/llm/query`, {
+      const response = await fetch(`${process.env.RAG_URL}/llm/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ provider, model, question }),

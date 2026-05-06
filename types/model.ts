@@ -1,10 +1,3 @@
-export type Model = {
-  id: string;
-  name: string;
-  providerId: string;
-  description?: string;
-};
-
 export const PROVIDERS = [
   "local-ollama",
   "cloud-ollama",
@@ -13,3 +6,10 @@ export const PROVIDERS = [
   "openrouter",
   "nvidia",
 ];
+
+export type Model = {
+  id: string;
+  name: string;
+  providerId: string;
+  description?: string;
+};
