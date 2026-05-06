@@ -45,7 +45,7 @@ export function MessageBubble({ message }: { message: Message }) {
                     </p>
                   )
                 )}
-              </div>{" "}
+              </div>
             </div>
           ) : (
             <div className="flex gap-2 pr-10">
@@ -56,52 +56,72 @@ export function MessageBubble({ message }: { message: Message }) {
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    code(
-                      props: ComponentPropsWithoutRef<"code"> & {
-                        inline?: boolean;
-                        node?: unknown;
-                      },
-                    ) {
-                      const {
-                        children,
-                        className,
-                        node: _node,
-                        ...rest
-                      } = props;
-                      const match = /language-(\\w+)/.exec(className || "");
-                      return match ? (
-                        <div className="overflow-hidden my-4 rounded-lg border border-border">
-                          <SyntaxHighlighter
-                            {...rest}
-                            PreTag="div"
-                            language={match[1]}
-                            style={vscDarkPlus}
-                            customStyle={{
-                              margin: 0,
-                              padding: "1rem",
-                              background: "transparent",
-                            }}
-                          >
-                            {String(children).replace(/\\n$/, "")}
-                          </SyntaxHighlighter>
-                        </div>
-                      ) : (
-                        <div className="my-2 rounded-2xl border shadow-sm border-border">
-                          <div className="flex justify-between items-center py-1 pr-2 pl-3 rounded-t-2xl border-b border-border text-muted-foreground bg-sidebar">
-                            <p>Code</p>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 p-0.5 hover:bg-secondary/80 dark:hover:bg-secondary/70"
-                              onClick={() => handleCopy(String(children))}
+                    pre({ children }) {
+                      const codeEl = children as React.ReactElement;
+                      const codeProps: ComponentPropsWithoutRef<"code"> =
+                        codeEl.props ?? {};
+                      const codeClassName = codeProps.className ?? "";
+                      const codeContent = String(
+                        codeProps.children ?? "",
+                      ).replace(/\n$/, "");
+                      const match = /language-(\w+)/.exec(codeClassName);
+                      if (match) {
+                        return (
+                          <div className="overflow-hidden my-4 rounded-lg border border-border">
+                            <div className="flex justify-between items-center py-0.5 pr-0.5 pl-3 text-muted-foreground bg-sidebar">
+                              <>Code</>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8 p-0.5 hover:bg-secondary/80 dark:hover:bg-secondary/70"
+                                onClick={() => handleCopy(codeContent)}
+                              >
+                                <IconCopy size={16} />
+                              </Button>
+                            </div>
+                            <SyntaxHighlighter
+                              PreTag="div"
+                              language={match[1]}
+                              style={vscDarkPlus}
+                              customStyle={{
+                                margin: 0,
+                                padding: "1rem",
+                                background: "transparent",
+                              }}
                             >
-                              <IconCopy size={16} />
-                            </Button>
+                              {codeContent}
+                            </SyntaxHighlighter>
                           </div>
+                        );
+                      }
+                      return (
+                        <div className="my-2 border shadow-sm border-border">
                           <div className="px-3 py-2 dark:bg-sidebar/40">
-                            <code {...rest}>{String(children)}</code>
+                            <code>{codeContent}</code>
                           </div>
                         </div>
+                      );
+                    },
+                    code({
+                      inline,
+                      className,
+                      children,
+                      ...rest
+                    }: ComponentPropsWithoutRef<"code"> & {
+                      inline?: boolean;
+                      node?: unknown;
+                    }) {
+                      if (inline) {
+                        return (
+                          <code className={className} {...rest}>
+                            {String(children)}
+                          </code>
+                        );
+                      }
+                      return (
+                        <code className={className} {...rest}>
+                          {String(children)}
+                        </code>
                       );
                     },
                     strong({ children }) {

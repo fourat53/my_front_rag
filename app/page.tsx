@@ -89,17 +89,6 @@ export default function HomePage() {
     loadModels();
   }, [selectedProvider]);
 
-  const handleInputChange = useCallback(
-    (
-      e:
-        | React.ChangeEvent<HTMLTextAreaElement>
-        | React.ChangeEvent<HTMLInputElement>,
-    ) => {
-      setInput(e.target.value);
-    },
-    [],
-  );
-
   const transport = useMemo(
     () =>
       // eslint-disable-next-line react-hooks/refs
@@ -303,13 +292,13 @@ export default function HomePage() {
           <ChatInput
             stop={stop}
             input={input}
+            setInput={setInput}
             isLoading={isLoading}
             handleSubmit={onSubmitWrapper}
             availableModels={models}
             isLoadingModels={isLoadingModels}
             selectedModel={selectedModel}
             setSelectedModel={setSelectedModel}
-            handleInputChange={handleInputChange}
           />
           <div className="z-20 text-center py-2.5 text-xs text-muted-foreground">
             AI can make mistakes. Consider verifying important information.

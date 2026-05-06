@@ -91,8 +91,7 @@ export async function POST(req: Request) {
         );
       }
 
-      const text = await response.text();
-      return new Response(text, {
+      return new Response(response.body, {
         status: 200,
         headers: {
           "Content-Type": "text/plain; charset=utf-8",

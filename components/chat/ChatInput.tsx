@@ -13,6 +13,7 @@ import { Model } from "@/types/model";
 
 interface ChatInputProps {
   input: string;
+  setInput: (input: string) => void;
   handleSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
   isLoading?: boolean;
   stop?: () => void;
@@ -20,16 +21,11 @@ interface ChatInputProps {
   setSelectedModel: (model: Model) => void;
   availableModels: Model[];
   isLoadingModels?: boolean;
-  handleInputChange: (
-    e:
-      | React.ChangeEvent<HTMLTextAreaElement>
-      | React.ChangeEvent<HTMLInputElement>,
-  ) => void;
 }
 
 export function ChatInput({
   input,
-  handleInputChange,
+  setInput,
   handleSubmit,
   isLoading,
   stop,
@@ -41,6 +37,7 @@ export function ChatInput({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      setInput("");
       if (isLoading && stop) {
         stop();
       } else if (input) {
@@ -56,7 +53,7 @@ export function ChatInput({
     >
       <textarea
         value={input}
-        onChange={handleInputChange}
+        onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="Ask anything..."
         className="w-full max-h-64 min-h-15 resize-none p-4 outline-none text-sm placeholder:text-muted-foreground"
@@ -126,7 +123,7 @@ export function ChatInput({
 
         <Button
           onClick={isLoading ? stop : undefined}
-          disabled={input.trim() === ""}
+          disabled={!input || input.trim() === ""}
           loading={isLoading}
           icon={<IconSend size={16} />}
           size="icon"
