@@ -7,7 +7,7 @@ import { ComponentPropsWithoutRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import ReactMarkdown from "react-markdown";
-import { Message } from "@/types/message";
+import { Message } from "@/models/Message";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
 import clsx from "clsx";

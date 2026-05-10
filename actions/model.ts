@@ -1,6 +1,6 @@
 "use server";
 
-import { Model } from "@/types/model";
+import { Model } from "@/models/Provider";
 
 export async function fetchModelsFromProvider(
   providerId: string,

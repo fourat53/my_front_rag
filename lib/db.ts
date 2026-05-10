@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Db, MongoClient } from "mongodb";
 
 const MONGODB_URL = process.env.MONGODB_URL;
@@ -6,30 +7,38 @@ if (!MONGODB_URL) {
 }
 
 declare global {
-  var __mongoClient: MongoClient | undefined;
   var __mongoClientPromise: Promise<MongoClient> | undefined;
+  var __mongoosePromise: Promise<typeof mongoose> | undefined;
 }
 
-let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
-
 if (process.env.NODE_ENV === "development") {
-  if (!global.__mongoClient) {
-    global.__mongoClient = new MongoClient(MONGODB_URL);
-    global.__mongoClientPromise = global.__mongoClient.connect();
+  if (!global.__mongoClientPromise) {
+    const client = new MongoClient(MONGODB_URL);
+    global.__mongoClientPromise = client.connect();
   }
-  client = global.__mongoClient;
-  clientPromise = global.__mongoClientPromise!;
+  clientPromise = global.__mongoClientPromise;
 } else {
-  client = new MongoClient(MONGODB_URL);
+  const client = new MongoClient(MONGODB_URL);
   clientPromise = client.connect();
 }
 
-const db: Db = client.db();
+const syncClient = new MongoClient(MONGODB_URL);
+export const db: Db = syncClient.db();
 
 async function getDb(): Promise<Db> {
   const client = await clientPromise;
   return client.db();
 }
 
-export { clientPromise, db, getDb };
+async function connectDB() {
+  if (global.__mongoosePromise) {
+    return global.__mongoosePromise;
+  }
+  global.__mongoosePromise = mongoose.connect(MONGODB_URL!, {
+    bufferCommands: false,
+  });
+  await global.__mongoosePromise;
+  return mongoose.connection;
+}
+export { clientPromise, getDb, connectDB };

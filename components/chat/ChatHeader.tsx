@@ -1,5 +1,5 @@
+import { useChatStore } from "@/store/useChatStore";
 import { SidebarTrigger } from "../ui/sidebar";
-import { Conversation } from "@/types/conversation";
 import {
   Select,
   SelectContent,
@@ -7,32 +7,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PROVIDERS } from "@/types/model";
+import { getProviders } from "@/actions/provider";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
-interface ChatHeaderProps {
-  activeConvId: string;
-  conversations: Conversation[];
-  selectedProvider: string;
-  setSelectedProvider: (provider: string) => void;
-}
+export default function ChatHeader() {
+  const {
+    conversations,
+    selectedConversationId,
+    selectedProvider,
+    setSelectedProvider,
+    providers,
+    setProviders,
+  } = useChatStore();
 
-export default function ChatHeader({
-  activeConvId,
-  conversations,
-  selectedProvider,
-  setSelectedProvider,
-}: ChatHeaderProps) {
-  const activeConv = conversations.find((c) => c._id === activeConvId) || null;
+  const { data: dbProviders } = useQuery({
+    queryKey: ["providers"],
+    queryFn: () => getProviders(),
+  });
 
-  const handleProviderChange = (newProvider: string) => {
-    const provider = PROVIDERS.find((p) => p === newProvider);
+  useEffect(() => {
+    if (dbProviders && dbProviders.length > 0) {
+      setProviders(dbProviders);
+      if (!selectedProvider) {
+        setSelectedProvider(dbProviders[dbProviders.length - 1].id);
+      }
+    }
+  }, [dbProviders, selectedProvider, setProviders, setSelectedProvider]);
+
+  const activeConv =
+    conversations.find((c) => c._id === selectedConversationId) || null;
+
+  const handleProviderChange = (newProviderId: string) => {
+    const provider = providers.find((p) => p.id === newProviderId);
     if (provider) {
-      setSelectedProvider(provider);
+      setSelectedProvider(provider.id);
     }
   };
 
   return (
-    <div className="flex justify-between items-center px-4 w-full h-14">
+    <div className="pb-2 flex justify-between items-center px-4 w-full h-14">
       <div className="flex gap-2 items-center">
         <SidebarTrigger className="size-9" />
         <span className="ml-2 text-lg font-semibold">
@@ -40,16 +54,16 @@ export default function ChatHeader({
         </span>
       </div>
       <Select
-        value={selectedProvider}
+        value={providers.find((p) => p.id === selectedProvider)?.name}
         onValueChange={(val) => handleProviderChange(val || "")}
       >
         <SelectTrigger className="w-40 h-8 bg-transparent border-none shadow-none text-xs hover:bg-accent hover:text-white focus-visible:ring-0">
-          <SelectValue />
+          <SelectValue placeholder="Select Provider" />
         </SelectTrigger>
         <SelectContent>
-          {PROVIDERS.map((p, index) => (
-            <SelectItem key={index} value={p}>
-              {p}
+          {providers.map((p) => (
+            <SelectItem key={p.id} value={p.id}>
+              {p.name}
             </SelectItem>
           ))}
         </SelectContent>

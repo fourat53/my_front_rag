@@ -6,34 +6,126 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
 } from "@/components/ui/select";
-import { Model } from "@/types/model";
+import { useChatStore } from "@/store/useChatStore";
+import { fetchModelsFromProvider } from "@/actions/model";
+import { useEffect } from "react";
+import { createConversation } from "@/actions/conversation";
+import { useSession } from "@/lib/auth-client";
 
 interface ChatInputProps {
-  input: string;
-  setInput: (input: string) => void;
-  handleSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
   isLoading?: boolean;
   stop?: () => void;
-  selectedModel: Model | null;
-  setSelectedModel: (model: Model) => void;
-  availableModels: Model[];
-  isLoadingModels?: boolean;
+  sendMessage: (message: { text: string }, options?: { body?: object }) => Promise<void>;
 }
 
-export function ChatInput({
-  input,
-  setInput,
-  handleSubmit,
-  isLoading,
-  stop,
-  selectedModel,
-  setSelectedModel,
-  availableModels,
-  isLoadingModels,
-}: ChatInputProps) {
+export function ChatInput({ isLoading, stop, sendMessage }: ChatInputProps) {
+  const { data: session } = useSession();
+  const {
+    input,
+    setInput,
+    conversations,
+    setConversations,
+    models,
+    setModels,
+    selectedModel,
+    setSelectedModel,
+    loadingModels,
+    setLoadingModels,
+    selectedProvider,
+    selectedConversationId,
+    setSelectedConversationId,
+  } = useChatStore();
+
+  useEffect(() => {
+    async function loadModels() {
+      try {
+        setLoadingModels(true);
+        const providerModels = await fetchModelsFromProvider(selectedProvider);
+        setModels(providerModels);
+        if (providerModels.length > 0) {
+          setSelectedModel(providerModels[0]);
+        } else {
+          setSelectedModel(null);
+        }
+      } catch (err) {
+        console.error("Failed to load models:", err);
+      } finally {
+        setLoadingModels(false);
+      }
+    }
+    loadModels();
+  }, [selectedProvider, setSelectedModel, setModels, setLoadingModels]);
+
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) {
+      console.error("Please enter a message");
+      return;
+    }
+
+    if (!selectedProvider || !selectedModel) {
+      console.error("Please select a provider and model");
+      return;
+    }
+
+    let convId = selectedConversationId;
+    if (!convId) {
+      const title = input.slice(0, 50) + (input.length > 50 ? "..." : "");
+      if (session?.user) {
+        try {
+          const created = await createConversation({
+            title,
+            providerId: selectedProvider,
+            modelId: selectedModel.id,
+          });
+          convId = created._id;
+
+          setConversations([
+            {
+              _id: created._id,
+              userId: created.userId || "",
+              title,
+              updatedAt: new Date().toISOString(),
+              messages: [],
+              providerId: selectedProvider,
+              modelId: selectedModel.id,
+            },
+            ...conversations,
+          ]);
+        } catch (_err) {
+          console.error("Failed to create conversation:", _err);
+          return;
+        }
+      } else {
+        convId = crypto.randomUUID();
+        setConversations([
+          {
+            _id: convId,
+            userId: session?.user?.id || "",
+            title,
+            updatedAt: new Date().toISOString(),
+            messages: [],
+            providerId: selectedProvider,
+            modelId: selectedModel.id,
+          },
+          ...conversations,
+        ]);
+      }
+      setSelectedConversationId(convId);
+    }
+
+    await sendMessage(
+      { text: input.trim() },
+      { body: { provider: selectedProvider, model: selectedModel.id } }
+    );
+    setInput("");
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -88,34 +180,35 @@ export function ChatInput({
 
           <div className="mx-px w-px h-4 bg-border" />
 
-          {isLoadingModels ? (
+          {loadingModels ? (
             <div className="w-48 h-8 bg-muted rounded-full animate-pulse" />
           ) : (
             <Select
               value={selectedModel?.id || ""}
               onValueChange={(val) => {
-                const model = availableModels.find((m) => m.id === val);
+                const model = models.find((m) => m.id === val);
                 if (model) {
                   setSelectedModel(model);
                 }
               }}
-              disabled={availableModels.length === 0}
+              disabled={models.length === 0}
             >
               <SelectTrigger className="w-48 h-8 bg-transparent border-none shadow-none text-xs hover:bg-accent hover:text-white focus-visible:ring-0">
                 <SelectValue
-                  placeholder={
-                    availableModels.length === 0 ? "No models" : "Model"
-                  }
+                  placeholder={models.length === 0 ? "No models" : "Model"}
                 />
               </SelectTrigger>
               <SelectContent>
-                {availableModels.map((m, index) => (
-                  <SelectItem key={index} value={m.id}>
-                    <p title={m.name} className="truncate max-w-38">
-                      {m.name}
-                    </p>
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Models</SelectLabel>
+                  {models.map((m, index) => (
+                    <SelectItem key={index} value={m.id}>
+                      <p title={m.name} className="truncate max-w-38">
+                        {m.name}
+                      </p>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           )}

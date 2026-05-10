@@ -1,10 +1,10 @@
 "use server";
 
-import { getDb } from "@/lib/db";
+import { connectDB } from "@/lib/db";
+import { ConversationModel, Conversation } from "@/models/Conversation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { ObjectId } from "mongodb";
-import { Conversation } from "@/types/conversation";
+import { Message } from "@/models/Message";
 
 async function getUserId(): Promise<string | null> {
   try {
@@ -22,32 +22,38 @@ export async function createConversation(data: {
 }) {
   const userId = await getUserId();
   if (!userId) throw new Error("Unauthorized");
-  const db = await getDb();
+  await connectDB();
 
-  const now = new Date().toISOString();
-  const doc = {
+  const now = new Date();
+  const doc = new ConversationModel({
     userId,
     title: data.title,
     providerId: data.providerId,
     modelId: data.modelId,
     messages: [],
     updatedAt: now,
-  };
+  });
 
-  const result = await db.collection("conversations").insertOne({ ...doc });
-  return { _id: result.insertedId.toString(), ...doc };
+  const result = await doc.save();
+  return {
+    _id: result._id.toString(),
+    userId: result.userId,
+    title: result.title,
+    providerId: result.providerId,
+    modelId: result.modelId,
+    messages: result.messages,
+    updatedAt: new Date(result.updatedAt).toISOString(),
+  };
 }
 
 export async function getConversations(): Promise<Conversation[]> {
   const userId = await getUserId();
   if (!userId) return [];
-  const db = await getDb();
+  await connectDB();
 
-  const docs = await db
-    .collection<Omit<Conversation, "_id">>("conversations")
-    .find({ userId })
+  const docs = await ConversationModel.find({ userId })
     .sort({ updatedAt: -1 })
-    .toArray();
+    .lean();
 
   return docs.map((doc) => ({
     _id: doc._id.toString(),
@@ -55,8 +61,8 @@ export async function getConversations(): Promise<Conversation[]> {
     title: doc.title,
     providerId: doc.providerId,
     modelId: doc.modelId,
-    messages: doc.messages,
-    updatedAt: doc.updatedAt,
+    messages: doc.messages as Message[],
+    updatedAt: new Date(doc.updatedAt).toISOString(),
   }));
 }
 
@@ -65,11 +71,9 @@ export async function getConversation(
 ): Promise<Conversation | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const db = await getDb();
+  await connectDB();
 
-  const doc = await db
-    .collection("conversations")
-    .findOne({ _id: new ObjectId(id), userId });
+  const doc = await ConversationModel.findOne({ _id: id, userId }).lean();
 
   if (!doc) return null;
 
@@ -79,8 +83,8 @@ export async function getConversation(
     title: doc.title,
     providerId: doc.providerId,
     modelId: doc.modelId,
-    messages: doc.messages || [],
-    updatedAt: doc.updatedAt,
+    messages: doc.messages as Message[],
+    updatedAt: new Date(doc.updatedAt).toISOString(),
   };
 }
 
@@ -98,17 +102,18 @@ export async function updateConversation(
 ) {
   const userId = await getUserId();
   if (!userId) throw new Error("Unauthorized");
-  const db = await getDb();
+  await connectDB();
 
   const update: Record<string, unknown> = {
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date(),
   };
   if (data.title !== undefined) update.title = data.title;
   if (data.messages !== undefined) update.messages = data.messages;
 
-  await db
-    .collection("conversations")
-    .updateOne({ _id: new ObjectId(id), userId }, { $set: update });
+  await ConversationModel.updateOne(
+    { _id: id, userId },
+    { $set: update }
+  );
 
   return { success: true };
 }
@@ -116,11 +121,9 @@ export async function updateConversation(
 export async function deleteConversation(id: string) {
   const userId = await getUserId();
   if (!userId) throw new Error("Unauthorized");
-  const db = await getDb();
+  await connectDB();
 
-  await db
-    .collection("conversations")
-    .deleteOne({ _id: new ObjectId(id), userId });
+  await ConversationModel.deleteOne({ _id: id, userId });
 
   return { success: true };
 }
