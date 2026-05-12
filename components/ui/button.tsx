@@ -66,20 +66,17 @@ function Button({
   return (
     <ButtonPrimitive
       data-slot="button"
-      data-icon={showIcon ? `inline-${iconPosition}` : undefined}
-      className={cn(buttonVariants({ variant, size, className }))}
       disabled={loading || disabled || false}
+      className={cn(
+        buttonVariants({ variant, size, className }),
+        showIcon &&
+          iconPosition === "end" &&
+          "pl-4 flex-row-reverse items-center justify-between",
+      )}
       {...props}
     >
-      {iconPosition === "start" &&
-        showIcon &&
-        (loading ? <IconLoader2 className="animate-spin" /> : icon)}
-
+      {showIcon && (loading ? <IconLoader2 className="animate-spin" /> : icon)}
       {children}
-
-      {iconPosition === "end" &&
-        showIcon &&
-        (loading ? <IconLoader2 className="animate-spin" /> : icon)}
     </ButtonPrimitive>
   );
 }

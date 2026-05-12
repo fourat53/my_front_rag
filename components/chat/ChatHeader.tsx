@@ -1,5 +1,8 @@
 import { useChatStore } from "@/store/useChatStore";
+import { getProviders } from "@/actions/provider";
+import { useQuery } from "@tanstack/react-query";
 import { SidebarTrigger } from "../ui/sidebar";
+import { useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -7,9 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getProviders } from "@/actions/provider";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 
 export default function ChatHeader() {
   const {
@@ -54,7 +54,7 @@ export default function ChatHeader() {
         </span>
       </div>
       <Select
-        value={providers.find((p) => p.id === selectedProvider)?.name}
+        value={selectedProvider}
         onValueChange={(val) => handleProviderChange(val || "")}
       >
         <SelectTrigger className="w-40 h-8 bg-transparent border-none shadow-none text-xs hover:bg-accent hover:text-white focus-visible:ring-0">

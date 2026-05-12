@@ -14,6 +14,7 @@
     "@better-auth/mongo-adapter": "^1.6.9",
     "@tabler/icons-react": "^3.43.0",
     "@tanstack/react-query": "^5.100.9",
+    "@tanstack/react-query-devtools": "^5.100.9",
     "@types/react-syntax-highlighter": "^15.5.13",
     "ai": "^6.0.175",
     "better-auth": "^1.6.9",

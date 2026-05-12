@@ -6,29 +6,22 @@ import { Button } from "../ui/button";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
-export default function ThemeSwitch({
-  labeled,
-  className,
-}: {
-  labeled?: boolean;
-  className?: string;
-}) {
+export default function ThemeSwitch({ className }: { className?: string }) {
   return (
     <div
       className={cn(
         "z-50 flex items-center gap-1 rounded-full border p-1 bg-card",
-        labeled && "w-full grid grid-cols-3 px-2",
         className,
       )}
     >
       {themes.map((t: ThemesType) => (
-        <ThemeButton key={t.mode} t={t} labeled={labeled} />
+        <ThemeButton key={t.mode} t={t} />
       ))}
     </div>
   );
 }
 
-function ThemeButton({ t, labeled }: { t: ThemesType; labeled?: boolean }) {
+function ThemeButton({ t }: { t: ThemesType }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -46,11 +39,8 @@ function ThemeButton({ t, labeled }: { t: ThemesType; labeled?: boolean }) {
         mounted &&
           theme === t.mode &&
           "bg-primary text-white hover:bg-primary hover:text-white",
-        labeled && "w-full flex items-center gap-2",
       )}
       onClick={() => setTheme(t.mode)}
-    >
-      {labeled && <span>{t.label}</span>}
-    </Button>
+    />
   );
 }

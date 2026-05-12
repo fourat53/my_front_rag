@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+import { ReactQueryProvider } from "@/providers/query-provider";
 import { Geist, Geist_Mono, Outfit } from "next/font/google";
 import { ThemeProvider } from "@/providers/theme-provider";
-import { ReactQueryProvider } from "@/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { Metadata } from "next";
 import "./globals.css";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });

@@ -23,6 +23,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 interface ChatSidebarProps {
   setMessages: (messages: ChatMessage[]) => void;
@@ -77,7 +78,9 @@ export function ChatSidebar({ setMessages }: ChatSidebarProps) {
           })) as ChatMessage[],
         );
         setSelectedProvider(
-          providers.find((p) => p.id === conv.providerId)?.id || providers[0]?.id || "",
+          providers.find((p) => p.id === conv.providerId)?.id ||
+            providers[0]?.id ||
+            "",
         );
         const model = models.find((m) => m.id === conv.modelId);
         if (model) setSelectedModel(model);
@@ -116,15 +119,16 @@ export function ChatSidebar({ setMessages }: ChatSidebarProps) {
         <ThemeSwitch className="group-data-[collapsible=icon]:hidden" />
       </SidebarHeader>
       <div className="mx-2 border-b border-border" />
-      <SidebarContent>
+      <SidebarContent className="px-1">
         <SidebarGroup>
-          <div className="pt-1 pb-2 group-data-[collapsible=icon]:hidden">
+          <div className="py-2 group-data-[collapsible=icon]:hidden">
             <Button
               variant="default"
+              iconPosition="end"
+              icon={<IconPlus size={18} />}
               className="flex gap-2 justify-start items-center w-full"
               onClick={() => handleSelectConversation("")}
             >
-              <IconPlus size={18} />
               New Chat
             </Button>
           </div>
@@ -144,24 +148,27 @@ export function ChatSidebar({ setMessages }: ChatSidebarProps) {
               {conversations.map((conv) => (
                 <SidebarMenuItem
                   key={conv._id}
-                  className="group/item flex gap-1 items-center justify-between"
+                  title={conv.title}
+                  className="rounded-md hover:bg-muted/50 group/item flex items-center justify-between"
                 >
                   <SidebarMenuButton
-                    onClick={() => handleSelectConversation(conv._id)}
                     isActive={selectedConversationId === conv._id}
-                    tooltip={conv.title}
-                    className="rounded-md flex-1"
+                    className="pr-2 rounded-none rounded-l-md flex-1"
+                    onClick={() => handleSelectConversation(conv._id)}
                   >
                     <IconMessage size={16} />
                     <span className="truncate">{conv.title}</span>
                   </SidebarMenuButton>
-                  <Button
-                    size="icon"
-                    className="opacity-0 group-hover/item:opacity-100 size-7"
+                  <SidebarMenuButton
+                    isActive={selectedConversationId === conv._id}
+                    className={cn(
+                      "size-9 p-2.5 hover:bg-red-600/10 rounded-none rounded-r-md  group-hover/item:opacity-100",
+                      selectedConversationId !== conv._id && "opacity-0",
+                    )}
                     onClick={() => handleDeleteConv(conv._id)}
                   >
                     <IconTrash size={14} />
-                  </Button>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
