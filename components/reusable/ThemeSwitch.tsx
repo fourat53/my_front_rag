@@ -14,8 +14,8 @@ export default function ThemeSwitch({ className }: { className?: string }) {
         className,
       )}
     >
-      {themes.map((t: ThemesType) => (
-        <ThemeButton key={t.mode} t={t} />
+      {themes.map((t: ThemesType, index: number) => (
+        <ThemeButton key={index} t={t} />
       ))}
     </div>
   );

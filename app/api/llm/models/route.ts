@@ -1,10 +1,16 @@
-"use server";
+import { NextRequest, NextResponse } from "next/server";
 
-import { Model } from "@/models/Provider";
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const providerId = searchParams.get("providerId");
 
-export async function fetchModelsFromProvider(
-  providerId: string,
-): Promise<Model[]> {
+  if (!providerId) {
+    return NextResponse.json(
+      { error: "providerId is required" },
+      { status: 400 },
+    );
+  }
+
   try {
     const response = await fetch(
       `${process.env.RAG_URL}/models/${providerId}`,
@@ -22,13 +28,13 @@ export async function fetchModelsFromProvider(
         `Failed to fetch models for ${providerId}:`,
         response.statusText,
       );
-      return [];
+      return NextResponse.json({ models: [] });
     }
 
     const data = await response.json();
-    return data.models || [];
+    return NextResponse.json({ models: data.models || [] });
   } catch (error) {
     console.error(`Error fetching models for ${providerId}:`, error);
-    return [];
+    return NextResponse.json({ models: [] });
   }
 }

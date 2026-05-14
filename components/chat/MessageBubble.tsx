@@ -1,19 +1,24 @@
 "use client";
 
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { IconRobot, IconCopy, IconEdit } from "@tabler/icons-react";
 import { ComponentPropsWithoutRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 import ReactMarkdown from "react-markdown";
-import { Message } from "@/models/Message";
+import { Message } from "@/types/message.type";
+import { useTheme } from "next-themes";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
 import clsx from "clsx";
+import {
+  vscDarkPlus,
+  prism,
+} from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export function MessageBubble({ message }: { message: Message }) {
   const { data: session } = useSession();
+  const { theme } = useTheme();
   const isUser = message.role === "user";
 
   const handleCopy = (text: string) => {
@@ -21,7 +26,7 @@ export function MessageBubble({ message }: { message: Message }) {
   };
 
   return (
-    <div className="flex flex-col gap-1 px-5 mx-auto w-full max-w-3xl rounded-2xl transition-colors group">
+    <div className="px-4 sm:px-8 md:px-4 lg:px-8 md:mx-auto md:max-w-2xl lg:max-w-3xl flex flex-col gap-1 w-full rounded-2xl transition-colors group">
       <div className="flex-1 space-y-2 min-w-0">
         <div className="max-w-none prose prose-sm dark:prose-invert prose-pre:p-0 prose-pre:bg-transparent prose-p:leading-relaxed">
           {isUser ? (
@@ -82,11 +87,12 @@ export function MessageBubble({ message }: { message: Message }) {
                             <SyntaxHighlighter
                               PreTag="div"
                               language={match[1]}
-                              style={vscDarkPlus}
+                              style={theme === "dark" ? vscDarkPlus : prism}
                               customStyle={{
                                 margin: 0,
                                 padding: "1rem",
                                 background: "transparent",
+                                fontSize: "0.85rem",
                               }}
                             >
                               {codeContent}
@@ -126,7 +132,7 @@ export function MessageBubble({ message }: { message: Message }) {
                     },
                     strong({ children }) {
                       return (
-                        <strong className="font-bold text-foreground text-[1.05em]">
+                        <strong className="font-bold text-[1.05em]">
                           {children}
                         </strong>
                       );
@@ -143,7 +149,7 @@ export function MessageBubble({ message }: { message: Message }) {
       <div
         className={clsx(
           "shrink-0 flex justify-end items-center opacity-0 group-hover:opacity-100 transition-opacity",
-          isUser ? "pr-10" : "pl-1.5",
+          isUser ? "pr-10 pb-3" : "-mt-2 pb-4 mr-4",
         )}
       >
         {isUser && (

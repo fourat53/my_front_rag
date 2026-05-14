@@ -2,16 +2,23 @@
 
 import { IconMessage, IconPlus, IconTrash } from "@tabler/icons-react";
 import { LogoutButton } from "@/components/reusable/logout-button";
-import { useChatStore } from "@/store/useChatStore";
 import ThemeSwitch from "@/components/reusable/ThemeSwitch";
-import { deleteConversation, getConversations } from "@/actions/conversation";
-import { Conversation } from "@/models/Conversation";
+import { Conversation } from "@/types/conversation.type";
+import { useChatStore } from "@/store/useChatStore";
+import { Provider } from "@/types/provider.type";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect } from "react";
+import { Message } from "@/types/message.type";
 import { useSession } from "@/lib/auth-client";
-import { ChatMessage } from "@/models/Message";
+import { Model } from "@/types/model.type";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
+import {
+  deleteConversation,
+  getConversations,
+} from "@/actions/conversation.action";
 import {
   Sidebar,
   SidebarContent,
@@ -23,41 +30,51 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 
 interface ChatSidebarProps {
-  setMessages: (messages: ChatMessage[]) => void;
+  setMessages: (messages: Message[]) => void;
+  providers: Provider[];
+  models: Model[];
 }
 
-export function ChatSidebar({ setMessages }: ChatSidebarProps) {
+export function ChatSidebar({
+  setMessages,
+  providers,
+  models,
+}: ChatSidebarProps) {
   const { data: session } = useSession();
   const {
-    models,
-    setSelectedModel,
     conversations,
     setConversations,
     selectedConversationId,
     setSelectedConversationId,
-    setSelectedProvider,
-    providers,
+    setSelectedProviderId,
+    setSelectedModelId,
   } = useChatStore();
 
+  const {
+    data: convData,
+    isLoading: isLoadingConversations,
+    error: convError,
+  } = useQuery({
+    queryKey: ["conversations"],
+    queryFn: () => getConversations(),
+    enabled: !!session?.user,
+  });
+
   useEffect(() => {
-    if (session?.user) {
-      getConversations().then((data) => {
-        const mapped: Conversation[] = data.map((c) => ({
-          _id: c._id,
-          userId: c.userId,
-          title: c.title,
-          updatedAt: c.updatedAt,
-          messages: c.messages,
-          providerId: c.providerId,
-          modelId: c.modelId,
-        }));
-        setConversations(mapped);
-      });
+    if (convData) {
+      const mapped: Conversation[] = convData.map((c) => ({
+        id: c.id,
+        title: c.title,
+        userId: c.userId,
+        modelId: c.modelId,
+        providerId: c.providerId,
+        messages: c.messages,
+      }));
+      setConversations(mapped);
     }
-  }, [session, setConversations]);
+  }, [convData, setConversations]);
 
   const handleSelectConversation = useCallback(
     (id: string) => {
@@ -66,24 +83,21 @@ export function ChatSidebar({ setMessages }: ChatSidebarProps) {
         setMessages([]);
         return;
       }
-      const conv = conversations.find((c) => c._id === id);
-      if (conv) {
-        setSelectedConversationId(conv._id);
+      const conv = conversations.find((c) => c.id === id);
+      if (conv && conv.messages) {
+        setSelectedConversationId(conv.id);
         setMessages(
           conv.messages.map((m) => ({
             id: m.id,
             role: m.role,
             parts: [{ type: "text", text: m.content }],
-            metadata: { createdAt: m.timestamp },
-          })) as ChatMessage[],
+          })) as Message[],
         );
-        setSelectedProvider(
-          providers.find((p) => p.id === conv.providerId)?.id ||
-            providers[0]?.id ||
-            "",
+        setSelectedProviderId(
+          providers.find((p) => p.id === conv.providerId)?.id || null,
         );
         const model = models.find((m) => m.id === conv.modelId);
-        if (model) setSelectedModel(model);
+        if (model) setSelectedModelId(model.id);
       }
     },
     [
@@ -91,8 +105,8 @@ export function ChatSidebar({ setMessages }: ChatSidebarProps) {
       setMessages,
       models,
       setSelectedConversationId,
-      setSelectedProvider,
-      setSelectedModel,
+      setSelectedProviderId,
+      setSelectedModelId,
       providers,
     ],
   );
@@ -100,9 +114,9 @@ export function ChatSidebar({ setMessages }: ChatSidebarProps) {
   const handleDeleteConv = async (id: string) => {
     if (session?.user) {
       await deleteConversation(id);
-      setConversations(conversations.filter((c) => c._id !== id));
+      setConversations(conversations.filter((c) => c.id !== id));
     } else {
-      setConversations(conversations.filter((c) => c._id !== id));
+      setConversations(conversations.filter((c) => c.id !== id));
     }
     if (selectedConversationId === id) {
       setSelectedConversationId("");
@@ -145,32 +159,42 @@ export function ChatSidebar({ setMessages }: ChatSidebarProps) {
 
           <SidebarGroupContent>
             <SidebarMenu>
-              {conversations.map((conv) => (
-                <SidebarMenuItem
-                  key={conv._id}
-                  title={conv.title}
-                  className="rounded-md hover:bg-muted/50 group/item flex items-center justify-between"
-                >
-                  <SidebarMenuButton
-                    isActive={selectedConversationId === conv._id}
-                    className="pr-2 rounded-none rounded-l-md flex-1"
-                    onClick={() => handleSelectConversation(conv._id)}
+              {isLoadingConversations ? (
+                <div className="p-4 text-center text-sm text-muted-foreground animate-pulse">
+                  Loading conversations...
+                </div>
+              ) : convError ? (
+                <div className="p-4 text-center text-sm text-red-500">
+                  Failed to load conversations
+                </div>
+              ) : (
+                conversations.map((conv, index) => (
+                  <SidebarMenuItem
+                    key={index}
+                    title={conv.title}
+                    className="rounded-md hover:bg-muted/50 group/item flex items-center justify-between"
                   >
-                    <IconMessage size={16} />
-                    <span className="truncate">{conv.title}</span>
-                  </SidebarMenuButton>
-                  <SidebarMenuButton
-                    isActive={selectedConversationId === conv._id}
-                    className={cn(
-                      "size-9 p-2.5 hover:bg-red-600/10 rounded-none rounded-r-md  group-hover/item:opacity-100",
-                      selectedConversationId !== conv._id && "opacity-0",
-                    )}
-                    onClick={() => handleDeleteConv(conv._id)}
-                  >
-                    <IconTrash size={14} />
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                    <SidebarMenuButton
+                      isActive={selectedConversationId === conv.id}
+                      className="pr-2 rounded-none rounded-l-md flex-1"
+                      onClick={() => handleSelectConversation(conv.id)}
+                    >
+                      <IconMessage size={16} />
+                      <span className="truncate">{conv.title}</span>
+                    </SidebarMenuButton>
+                    <SidebarMenuButton
+                      isActive={selectedConversationId === conv.id}
+                      className={cn(
+                        "size-9 p-2.5 hover:bg-red-600/10 rounded-none rounded-r-md  group-hover/item:opacity-100",
+                        selectedConversationId !== conv.id && "opacity-0",
+                      )}
+                      onClick={() => handleDeleteConv(conv.id)}
+                    >
+                      <IconTrash size={14} />
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

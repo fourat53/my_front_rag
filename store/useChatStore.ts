@@ -1,64 +1,51 @@
 import { create } from "zustand";
-import { Conversation } from "@/models/Conversation";
-import { Model } from "@/models/Provider";
+import { Conversation } from "@/types/conversation.type";
+import { Model } from "@/types/model.type";
+import { Provider } from "@/types/provider.type";
 
-export interface ProviderData {
-  id: string;
-  label: string;
-  name: string;
-}
 interface ChatState {
+  //Conversations
   conversations: Conversation[];
   setConversations: (conversations: Conversation[]) => void;
-
-  providers: ProviderData[];
-  setProviders: (providers: ProviderData[]) => void;
-
-  models: Model[];
-  setModels: (models: Model[]) => void;
-
-  selectedModel: Model | null;
-  setSelectedModel: (model: Model | null) => void;
-
-  loadingModels: boolean;
-  setLoadingModels: (loadingModels: boolean) => void;
 
   selectedConversationId: string;
   setSelectedConversationId: (id: string) => void;
 
-  selectedProvider: string;
-  setSelectedProvider: (provider: string) => void;
+  // Providers
+  selectedProviderId: string | null;
+  setSelectedProviderId: (providerId: string | null) => void;
 
+  // Models
+  selectedModelId: string | null;
+  setSelectedModelId: (modelId: string | null) => void;
+
+  // Input
   input: string;
   setInput: (input: string) => void;
 }
 
 const useChatStore = create<ChatState>((set) => ({
+  //Conversations
   conversations: [],
   setConversations: (conversations: Conversation[]) => set({ conversations }),
 
-  providers: [],
-  setProviders: (providers: ProviderData[]) => set({ providers }),
-
-  models: [],
-  setModels: (models: Model[]) => set({ models }),
-
-  selectedModel: null,
-  setSelectedModel: (model: Model | null) => set({ selectedModel: model }),
-
-  loadingModels: true,
-  setLoadingModels: (loadingModels: boolean) => set({ loadingModels }),
-
   selectedConversationId: "",
   setSelectedConversationId: (id: string) =>
-    set({ selectedConversationId: id }),
+    set((state) => state.selectedConversationId === id ? state : { selectedConversationId: id }),
 
-  selectedProvider: "",
-  setSelectedProvider: (provider: string) =>
-    set({ selectedProvider: provider }),
+  // Providers
+  selectedProviderId: null,
+  setSelectedProviderId: (providerId: string | null) =>
+    set((state) => state.selectedProviderId === providerId ? state : { selectedProviderId: providerId }),
 
+  // Models
+  selectedModelId: null,
+  setSelectedModelId: (modelId: string | null) =>
+    set((state) => state.selectedModelId === modelId ? state : { selectedModelId: modelId }),
+
+  // Input
   input: "",
-  setInput: (input: string) => set({ input }),
+  setInput: (input: string) => set((state) => state.input === input ? state : { input }),
 }));
 
 export { useChatStore };

@@ -1,10 +1,11 @@
 "use server";
 
-import { connectDB } from "@/lib/db";
-import { ConversationModel, Conversation } from "@/models/Conversation";
-import { auth } from "@/lib/auth";
+import { ConversationModel } from "@/models/conversation.model";
+import { Conversation } from "@/types/conversation.type";
+import { Message } from "@/types/message.type";
 import { headers } from "next/headers";
-import { Message } from "@/models/Message";
+import { connectDB } from "@/lib/db";
+import { auth } from "@/lib/auth";
 
 async function getUserId(): Promise<string | null> {
   try {
@@ -55,49 +56,36 @@ export async function getConversations(): Promise<Conversation[]> {
     .sort({ updatedAt: -1 })
     .lean();
 
-  return docs.map((doc) => ({
-    _id: doc._id.toString(),
-    userId: doc.userId,
-    title: doc.title,
-    providerId: doc.providerId,
-    modelId: doc.modelId,
-    messages: doc.messages as Message[],
-    updatedAt: new Date(doc.updatedAt).toISOString(),
-  }));
+  const serialized = JSON.parse(JSON.stringify(docs));
+  return serialized.map((doc: { _id: string; [key: string]: unknown }) => ({
+    ...doc,
+    id: doc._id,
+  })) as Conversation[];
 }
 
 export async function getConversation(
-  id: string,
+  _id: string,
 ): Promise<Conversation | null> {
   const userId = await getUserId();
   if (!userId) return null;
   await connectDB();
 
-  const doc = await ConversationModel.findOne({ _id: id, userId }).lean();
+  const doc = await ConversationModel.findOne({ _id, userId }).lean();
 
   if (!doc) return null;
 
+  const serialized = JSON.parse(JSON.stringify(doc));
   return {
-    _id: doc._id.toString(),
-    userId: doc.userId,
-    title: doc.title,
-    providerId: doc.providerId,
-    modelId: doc.modelId,
-    messages: doc.messages as Message[],
-    updatedAt: new Date(doc.updatedAt).toISOString(),
+    ...serialized,
+    id: serialized._id,
   };
 }
 
 export async function updateConversation(
-  id: string,
+  _id: string,
   data: {
     title?: string;
-    messages?: Array<{
-      id: string;
-      role: "user" | "assistant";
-      content: string;
-      timestamp: string;
-    }>;
+    messages?: Message[];
   },
 ) {
   const userId = await getUserId();
@@ -110,20 +98,17 @@ export async function updateConversation(
   if (data.title !== undefined) update.title = data.title;
   if (data.messages !== undefined) update.messages = data.messages;
 
-  await ConversationModel.updateOne(
-    { _id: id, userId },
-    { $set: update }
-  );
+  await ConversationModel.updateOne({ _id, userId }, { $set: update });
 
   return { success: true };
 }
 
-export async function deleteConversation(id: string) {
+export async function deleteConversation(_id: string) {
   const userId = await getUserId();
   if (!userId) throw new Error("Unauthorized");
   await connectDB();
 
-  await ConversationModel.deleteOne({ _id: id, userId });
+  await ConversationModel.deleteOne({ _id, userId });
 
   return { success: true };
 }
