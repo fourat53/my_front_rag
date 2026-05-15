@@ -13,10 +13,10 @@ import { useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/lib/auth-client";
 import { TextStreamChatTransport } from "ai";
-import { useChat } from "@ai-sdk/react";
 import { Model } from "@/types/model.type";
+import { useChat } from "@ai-sdk/react";
 
-function mapToMessage(msg: Message): Message {
+export function mapToMessage(msg: Message): Message {
   const fromParts = Array.isArray(msg.parts)
     ? msg.parts
         .filter((p) => p.type === "text")
@@ -34,27 +34,28 @@ function mapToMessage(msg: Message): Message {
 
 export default function HomePage() {
   const { data: session } = useSession();
-  const { selectedConversationId, selectedProviderId } = useChatStore();
+  const { selectedConversation, selectedProvider } = useChatStore();
   const lastMessageLength = useRef(0);
 
-  const { data: providers } = useQuery({
+  const {
+    data: providers = [],
+    isLoading: loadingProviders,
+    error: errorProviders,
+  } = useQuery({
     queryKey: ["providers"],
     queryFn: () => getProviders(),
   });
 
-  const activeProvider =
-    providers?.find((p) => p.id === selectedProviderId) || null;
-
   const {
-    data: models,
+    data: models = [],
     isLoading: loadingModels,
     error: errorModels,
   } = useQuery({
-    queryKey: ["models", activeProvider],
+    queryKey: ["models", selectedProvider],
     queryFn: async () => {
-      if (!activeProvider) return [];
+      if (!selectedProvider) return [];
 
-      const models_url = `/api/llm/models?providerId=${activeProvider.label}`;
+      const models_url = `/api/llm/models?providerId=${selectedProvider.label}`;
       const response = await fetch(models_url);
 
       if (!response.ok) throw new Error("Failed to load models");
@@ -62,7 +63,7 @@ export default function HomePage() {
 
       return (data.models || []) as Model[];
     },
-    enabled: !!activeProvider,
+    enabled: !!selectedProvider,
   });
 
   const transport = useMemo(() => {
@@ -80,8 +81,6 @@ export default function HomePage() {
     },
   );
 
-  const isLoading = status === "submitted" || status === "streaming";
-
   useEffect(() => {
     const handleConversationUpdate = () => {
       try {
@@ -90,10 +89,10 @@ export default function HomePage() {
           messages.length > 0 &&
           messages.length > lastMessageLength.current &&
           session?.user &&
-          selectedConversationId
+          selectedConversation?.id
         ) {
           lastMessageLength.current = messages.length;
-          updateConversation(selectedConversationId, {
+          updateConversation(selectedConversation.id, {
             messages: messages.map(mapToMessage),
           });
         }
@@ -102,22 +101,27 @@ export default function HomePage() {
       }
     };
     handleConversationUpdate();
-  }, [status, messages, session, selectedConversationId]);
+  }, [status, messages, session, selectedConversation?.id]);
 
   return (
     <SidebarProvider className="flex overflow-hidden w-full h-screen bg-background">
       <ChatSidebar
         setMessages={setMessages}
-        providers={providers || []}
-        models={models || []}
+        providers={providers}
+        models={models}
+        session={session}
       />
 
       <SidebarInset className="flex relative flex-col flex-1 h-full bg-transparent">
-        <ChatHeader providers={providers || []} />
+        <ChatHeader providers={providers} />
         <div className="overflow-y-auto flex-1 pt-8 pb-5 space-y-2 rounded-t-xl border border-b-0 border-border bg-background">
           {messages.length > 0 ? (
             (messages as Message[]).map((msg, index) => (
-              <MessageBubble key={index} message={mapToMessage(msg)} />
+              <MessageBubble
+                key={index}
+                message={mapToMessage(msg)}
+                session={session}
+              />
             ))
           ) : (
             <div className="flex flex-col justify-center items-center px-2 mx-auto space-y-4 max-w-md h-full text-center">
@@ -135,11 +139,11 @@ export default function HomePage() {
         <div className="relative mb-4 w-full rounded-b-xl border border-t-0 border-border bg-background">
           <ChatInput
             stop={stop}
-            models={models || []}
-            loadingModels={loadingModels}
+            status={status}
+            models={models}
+            session={session}
             errorModels={errorModels}
-            isLoading={isLoading}
-            providers={providers}
+            loadingModels={loadingModels}
             sendMessage={sendMessage}
           />
 

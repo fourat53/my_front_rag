@@ -43,7 +43,6 @@ export async function createConversation(data: {
     providerId: result.providerId,
     modelId: result.modelId,
     messages: result.messages,
-    updatedAt: new Date(result.updatedAt).toISOString(),
   };
 }
 

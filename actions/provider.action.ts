@@ -12,20 +12,15 @@ const PROVIDERS: ProviderBody[] = [
   { label: "openai", name: "OpenAI" },
   { label: "gemini", name: "Gemini" },
   { label: "openrouter", name: "OpenRouter" },
-];
+] as const;
 
 export async function seed(): Promise<Provider[]> {
   await connectDB();
-  console.log("****** Connected to DB *******");
 
   await ProviderModel.deleteMany({});
   console.log("Cleared existing providers.");
 
   const createdProviders = await ProviderModel.insertMany(PROVIDERS);
-
-  console.log(
-    `****** Seeding complete: ${createdProviders.length} inserted ******`,
-  );
 
   const serialized = JSON.parse(JSON.stringify(createdProviders));
   return serialized.map((p: { _id: string; [key: string]: unknown }) => ({

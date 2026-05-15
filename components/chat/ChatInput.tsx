@@ -5,7 +5,7 @@ import { createConversation } from "@/actions/conversation.action";
 import { useChatStore } from "@/store/useChatStore";
 import { Provider } from "@/types/provider.type";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/lib/auth-client";
+import { Conversation } from "@/types/conversation.type";
 import { Model } from "@/types/model.type";
 import { useEffect } from "react";
 import {
@@ -17,14 +17,15 @@ import {
   SelectValue,
   SelectGroup,
 } from "@/components/ui/select";
+import { ChatStatus } from "ai";
 
 interface ChatInputProps {
   stop?: () => void;
-  models?: Model[];
+  models: Model[];
   errorModels: Error | null;
   loadingModels: boolean;
-  isLoading?: boolean;
-  providers?: Provider[] | [];
+  status: ChatStatus;
+  session: any;
   sendMessage: (
     message: { text: string },
     options?: { body?: object },
@@ -33,112 +34,103 @@ interface ChatInputProps {
 
 export function ChatInput({
   stop,
+  status,
   models,
   errorModels,
   loadingModels,
-  isLoading,
+  session,
   sendMessage,
-  providers,
 }: ChatInputProps) {
-  const { data: session } = useSession();
   const {
     input,
     setInput,
     conversations,
     setConversations,
-    selectedModelId,
-    setSelectedModelId,
-    selectedProviderId,
-    selectedConversationId,
-    setSelectedConversationId,
+    selectedModel,
+    setSelectedModel,
+    selectedProvider,
+    selectedConversation,
+    setSelectedConversation,
   } = useChatStore();
 
   useEffect(() => {
     if (!models) return;
 
-    const isCurrentModelValid = models.some((m) => m.id === selectedModelId);
+    const isCurrentModelValid = models.some((m) => m.id === selectedModel?.id);
 
     if (models.length > 0) {
-      if (!selectedModelId || !isCurrentModelValid) {
-        setSelectedModelId(models[0].id);
+      if (!selectedModel || !isCurrentModelValid) {
+        setSelectedModel(models[0]);
       }
     } else {
-      if (selectedModelId !== null) {
-        setSelectedModelId(null);
+      if (selectedModel !== null) {
+        setSelectedModel(null);
       }
     }
-  }, [models, selectedModelId, setSelectedModelId]);
+  }, [models, selectedModel, setSelectedModel]);
 
   const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) {
-      console.error("Please enter a message");
-      return;
-    }
+    if (!input.trim() || !selectedProvider || !selectedModel) return;
 
-    if (!selectedProviderId || !selectedModelId) {
-      console.error("Please select a provider and model");
-      return;
-    }
+    let convId: string | undefined = selectedConversation?.id;
+    if (convId) return;
+    const title = input.slice(0, 50) + (input.length > 50 ? "..." : "");
+    const providerId = selectedProvider.id;
+    const modelId = selectedModel.id;
+    let newConversation: Conversation;
+    if (session?.user) {
+      try {
+        const created = await createConversation({
+          title,
+          providerId,
+          modelId,
+        });
 
-    let convId = selectedConversationId;
-    if (!convId) {
-      const title = input.slice(0, 50) + (input.length > 50 ? "..." : "");
-      if (session?.user && selectedProviderId) {
-        try {
-          const created = await createConversation({
-            title,
-            providerId: selectedProviderId,
-            modelId: selectedModelId,
-          });
-          convId = created._id;
+        if (!created._id) return;
 
-          setConversations([
-            {
-              id: convId,
-              userId: created.userId || "",
-              title,
-              messages: [],
-              providerId: selectedProviderId,
-              modelId: selectedModelId,
-            },
-            ...conversations,
-          ]);
-        } catch (_err) {
-          console.error("Failed to create conversation:", _err);
-          return;
-        }
-      } else {
-        convId = crypto.randomUUID();
-        setConversations([
-          {
-            id: convId,
-            userId: session?.user?.id || "",
-            title,
-            messages: [],
-            providerId: selectedProviderId,
-            modelId: selectedModelId,
-          },
-          ...conversations,
-        ]);
+        convId = created._id;
+
+        newConversation = {
+          id: created._id,
+          userId: created.userId || "",
+          title,
+          messages: [],
+          providerId,
+          modelId,
+        };
+        setConversations([newConversation, ...conversations]);
+      } catch (_err) {
+        console.error("Failed to create conversation:", _err);
+        return;
       }
-      setSelectedConversationId(convId);
+    } else {
+      convId = crypto.randomUUID();
+      newConversation = {
+        id: convId,
+        userId: session?.user?.id || "",
+        title,
+        messages: [],
+        providerId,
+        modelId,
+      };
+      setConversations([newConversation, ...conversations]);
     }
-
-    const activeProvider =
-      providers?.find((p) => p.id === selectedProviderId) || null;
+    setSelectedConversation(newConversation);
 
     await sendMessage(
       { text: input.trim() },
       {
         body: {
-          provider: activeProvider?.label,
-          model: selectedModelId,
+          provider: selectedProvider?.label,
+          model: selectedModel.id,
         },
       },
     );
     setInput("");
   };
+
+  const isLoading = status === "submitted" || status === "streaming";
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -203,19 +195,17 @@ export function ChatInput({
               </div>
             ) : (
               <Select
-                value={selectedModelId || null}
+                value={selectedModel?.id ?? ""}
+                disabled={models.length === 0}
                 onValueChange={(val) => {
-                  const activeModel = models?.find((m) => m.id === val);
-                  if (!activeModel) return;
-                  setSelectedModelId(activeModel.id);
+                  setSelectedModel(models.find((m) => m.id === val) ?? null);
                 }}
-                disabled={models?.length === 0}
               >
                 <SelectTrigger className="w-32 sm:w-48 h-8 bg-transparent border-none shadow-none text-xs hover:bg-accent hover:text-white focus-visible:ring-0">
                   <SelectValue
-                    placeholder={models?.length === 0 ? "No models" : "Model"}
+                    placeholder={models.length === 0 ? "No models" : "Model"}
                   >
-                    {models?.find((m) => m.id === selectedModelId)?.name}
+                    {selectedModel?.name}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>

@@ -8,16 +8,16 @@ interface ChatState {
   conversations: Conversation[];
   setConversations: (conversations: Conversation[]) => void;
 
-  selectedConversationId: string;
-  setSelectedConversationId: (id: string) => void;
+  selectedConversation: Conversation | null;
+  setSelectedConversation: (conversation: Conversation | null) => void;
 
   // Providers
-  selectedProviderId: string | null;
-  setSelectedProviderId: (providerId: string | null) => void;
+  selectedProvider: Provider | null;
+  setSelectedProvider: (provider: Provider | null) => void;
 
   // Models
-  selectedModelId: string | null;
-  setSelectedModelId: (modelId: string | null) => void;
+  selectedModel: Model | null;
+  setSelectedModel: (model: Model | null) => void;
 
   // Input
   input: string;
@@ -29,23 +29,34 @@ const useChatStore = create<ChatState>((set) => ({
   conversations: [],
   setConversations: (conversations: Conversation[]) => set({ conversations }),
 
-  selectedConversationId: "",
-  setSelectedConversationId: (id: string) =>
-    set((state) => state.selectedConversationId === id ? state : { selectedConversationId: id }),
+  selectedConversation: null,
+  setSelectedConversation: (conversation: Conversation | null) =>
+    set((state) =>
+      state.selectedConversation?.id === conversation?.id
+        ? state
+        : { selectedConversation: conversation },
+    ),
 
   // Providers
-  selectedProviderId: null,
-  setSelectedProviderId: (providerId: string | null) =>
-    set((state) => state.selectedProviderId === providerId ? state : { selectedProviderId: providerId }),
+  selectedProvider: null,
+  setSelectedProvider: (provider: Provider | null) =>
+    set((state) =>
+      state.selectedProvider?.id === provider?.id
+        ? state
+        : { selectedProvider: provider },
+    ),
 
   // Models
-  selectedModelId: null,
-  setSelectedModelId: (modelId: string | null) =>
-    set((state) => state.selectedModelId === modelId ? state : { selectedModelId: modelId }),
+  selectedModel: null,
+  setSelectedModel: (model: Model | null) =>
+    set((state) =>
+      state.selectedModel?.id === model?.id ? state : { selectedModel: model },
+    ),
 
   // Input
   input: "",
-  setInput: (input: string) => set((state) => state.input === input ? state : { input }),
+  setInput: (input: string) =>
+    set((state) => (state.input === input ? state : { input })),
 }));
 
 export { useChatStore };

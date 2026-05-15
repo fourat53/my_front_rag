@@ -4,6 +4,8 @@ import { ThemeProvider } from "@/providers/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata } from "next";
 import "./globals.css";
+import MainLoader from "@/components/reusable/loader/loader";
+import { Suspense } from "react";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -34,7 +36,9 @@ export default function RootLayout({
       >
         <ReactQueryProvider>
           <ThemeProvider>
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <Suspense fallback={<MainLoader fixed />}>{children}</Suspense>
+            </TooltipProvider>
           </ThemeProvider>
         </ReactQueryProvider>
       </body>

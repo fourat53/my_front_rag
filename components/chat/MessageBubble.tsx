@@ -4,7 +4,6 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { IconRobot, IconCopy, IconEdit } from "@tabler/icons-react";
 import { ComponentPropsWithoutRef } from "react";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/lib/auth-client";
 import ReactMarkdown from "react-markdown";
 import { Message } from "@/types/message.type";
 import { useTheme } from "next-themes";
@@ -16,14 +15,18 @@ import {
   prism,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-export function MessageBubble({ message }: { message: Message }) {
-  const { data: session } = useSession();
+const handleCopy = (text: string) => {
+  navigator.clipboard.writeText(text);
+};
+
+type MessageBubbleProps = ComponentPropsWithoutRef<"div"> & {
+  message: Message;
+  session: any;
+};
+
+export function MessageBubble({ message, session }: MessageBubbleProps) {
   const { theme } = useTheme();
   const isUser = message.role === "user";
-
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
 
   return (
     <div className="px-4 sm:px-8 md:px-4 lg:px-8 md:mx-auto md:max-w-2xl lg:max-w-3xl flex flex-col gap-1 w-full rounded-2xl transition-colors group">
